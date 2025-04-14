@@ -146,7 +146,9 @@ export default function LandingPage() {
                 height: "0.25rem",
               }}
             />
-            <Heading style={{ zIndex: 2, color: "white" }}>{team.name}</Heading>
+            <Heading style={{ zIndex: 2, position: "relative" }}>
+              {team.name}
+            </Heading>
 
             <Text
               style={{
