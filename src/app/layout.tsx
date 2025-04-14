@@ -5,7 +5,13 @@ import classNames from "classnames";
 import { headers } from "next/headers";
 
 import { baseURL, meta, og, schema, style } from "@/app/resources/config";
-import { Background, Column, Flex, ThemeProvider, ToastProvider } from "@/once-ui/components";
+import {
+  Background,
+  Column,
+  Flex,
+  ThemeProvider,
+  ToastProvider,
+} from "@/once-ui/components";
 import { Meta, Schema } from "@/once-ui/modules";
 
 import { Geist } from "next/font/google";
@@ -42,7 +48,7 @@ export async function generateMetadata() {
     description: meta.description,
     baseURL,
     path: "/",
-    image: og.image
+    image: og.image,
   });
 }
 
@@ -71,7 +77,7 @@ export default function RootLayout({
         primary.variable,
         code.variable,
         secondary ? secondary.variable : "",
-        tertiary ? tertiary.variable : "",
+        tertiary ? tertiary.variable : ""
       )}
     >
       <Schema
@@ -107,32 +113,6 @@ export default function RootLayout({
       <ThemeProvider>
         <ToastProvider>
           <Column as="body" fillWidth margin="0" padding="0">
-            <Background
-              position="absolute"
-              mask={{
-                x: 100,
-                y: 0,
-                radius: 100,
-              }}
-              gradient={{
-                display: true,
-                x: 100,
-                y: 60,
-                width: 70,
-                height: 50,
-                tilt: -40,
-                opacity: 90,
-                colorStart: "accent-background-strong",
-                colorEnd: "page-background",
-              }}
-              grid={{
-                display: true,
-                opacity: 100,
-                width: "0.25rem",
-                color: "neutral-alpha-medium",
-                height: "0.25rem",
-              }}
-            />
             {children}
           </Column>
         </ToastProvider>
