@@ -12,26 +12,53 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 
 export default function PointsManagement() {
-  // Lokaler State, der initial mit den Werten aus der Datenbank befüllt werden könnte
   const [team1Score, setTeam1Score] = useState(75);
   const [team2Score, setTeam2Score] = useState(65);
 
-  // Optional: Lese initiale Werte aus Supabase (falls noch nicht vorhanden, setze Standardwerte)
+  // useEffect zum initialen Laden der Daten und Einrichten des Realtime-Channels
   useEffect(() => {
     async function fetchScores() {
       const { data, error } = await supabase
         .from("scores")
         .select("*")
-        .eq("id", "1")
+        .eq("id", 1)
         .single();
-      if (data) {
+      if (error) {
+        console.error("Error fetching scores:", error);
+      } else if (data) {
         setTeam1Score(data.team1Score);
         setTeam2Score(data.team2Score);
-      } else if (error) {
-        console.error("Error fetching scores:", error);
       }
     }
+
+    // Hole initiale Daten beim Laden der Seite
     fetchScores();
+
+    // Richte den Realtime Channel ein, um Updates zu empfangen
+    const channel = supabase
+      .channel("scores-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "scores",
+          filter: "id=eq.1",
+        },
+        (payload) => {
+          const data = payload.new;
+          if (data) {
+            setTeam1Score(data.team1Score);
+            setTeam2Score(data.team2Score);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup: entferne den Channel beim Unmount der Komponente
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Funktion, um Scores zu aktualisieren
@@ -92,16 +119,7 @@ export default function PointsManagement() {
             }}
           />
           <Heading style={{ zIndex: "2" }}>Team 1 - {team1Score}</Heading>
-          <div
-            style={{
-              position: "absolute",
-              top: "70%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              display: "flex",
-              gap: "1rem",
-            }}
-          >
+          <div className="buttonContainer">
             <Button
               onClick={incrementTeam1}
               variant="primary"
@@ -152,16 +170,7 @@ export default function PointsManagement() {
             }}
           />
           <Heading style={{ zIndex: "2" }}>{team2Score} - Team 2</Heading>
-          <div
-            style={{
-              position: "absolute",
-              top: "70%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              display: "flex",
-              gap: "1rem",
-            }}
-          >
+          <div className="buttonContainer">
             <Button
               onClick={incrementTeam2}
               variant="secondary"
@@ -185,6 +194,23 @@ export default function PointsManagement() {
           </div>
         </Column>
       </Row>
+
+      {/* Eingebettetes CSS für responsives Layout */}
+      <style jsx>{`
+        .buttonContainer {
+          position: absolute;
+          top: 70%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          gap: 1rem;
+        }
+        @media (orientation: portrait) {
+          .buttonContainer {
+            flex-direction: column;
+          }
+        }
+      `}</style>
     </RevealFx>
   );
 }

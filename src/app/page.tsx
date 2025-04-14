@@ -12,8 +12,8 @@ import {
 } from "@/once-ui/components";
 
 export default function LandingPage() {
-  const [team1Score, setTeam1Score] = useState(75);
-  const [team2Score, setTeam2Score] = useState(65);
+  const [team1Score, setTeam1Score] = useState(0);
+  const [team2Score, setTeam2Score] = useState(0);
 
   useEffect(() => {
     async function fetchScores() {
