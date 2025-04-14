@@ -12,6 +12,7 @@
   "dependencies": {
     "@floating-ui/react-dom": "^2.1.1",
     "@geist-ui/core": "^2.3.8",
+    "@supabase/supabase-js": "^2.49.4",
     "classnames": "^2.5.1",
     "compressorjs": "^1.2.1",
     "express": "^5.1.0",

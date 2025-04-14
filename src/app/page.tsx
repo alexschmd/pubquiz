@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Background,
   Heading,
@@ -10,9 +11,53 @@ import {
   RevealFx,
 } from "@/once-ui/components";
 
-export default function Home() {
-  const team1Score = 75;
-  const team2Score = 65;
+export default function LandingPage() {
+  const [team1Score, setTeam1Score] = useState(75);
+  const [team2Score, setTeam2Score] = useState(65);
+
+  useEffect(() => {
+    async function fetchScores() {
+      const { data, error } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("id", 1)
+        .single();
+      if (error) {
+        console.error("Error fetching scores:", error);
+      } else if (data) {
+        setTeam1Score(data.team1Score);
+        setTeam2Score(data.team2Score);
+      }
+    }
+
+    // Hole initiale Daten beim Laden der Seite
+    fetchScores();
+
+    // Richten den Realtime Channel ein, um später Updates zu empfangen
+    const channel = supabase
+      .channel("scores-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "scores",
+          filter: "id=eq.1",
+        },
+        (payload) => {
+          const data = payload.new;
+          if (data) {
+            setTeam1Score(data.team1Score);
+            setTeam2Score(data.team2Score);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <RevealFx
@@ -28,16 +73,12 @@ export default function Home() {
             width: "50%",
             position: "relative",
             padding: "16px",
-            overflow: "hidden", // Verhindert, dass der Background aus der Spalte herausragt
+            overflow: "hidden",
           }}
         >
           <Background
             position="absolute"
-            mask={{
-              x: 0,
-              y: 0,
-              radius: 100,
-            }}
+            mask={{ x: 0, y: 0, radius: 100 }}
             gradient={{
               display: true,
               x: 0,
@@ -65,16 +106,14 @@ export default function Home() {
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              fontSize: "20rem", // Sehr große Schriftgröße
-              fontWeight: "bold", // Fetter Text
-              color: "white", // Weiß für gute Lesbarkeit
+              fontSize: "20rem",
+              fontWeight: "bold",
+              color: "white",
             }}
           >
             {team1Score}
           </Text>
         </Column>
-
-        {/* Rechte Spalte mit individuellem Background für Team 2 */}
         <Column
           style={{
             width: "50%",
@@ -86,11 +125,7 @@ export default function Home() {
         >
           <Background
             position="absolute"
-            mask={{
-              x: 100,
-              y: 0,
-              radius: 100,
-            }}
+            mask={{ x: 100, y: 0, radius: 100 }}
             gradient={{
               display: true,
               x: 100,
@@ -111,8 +146,6 @@ export default function Home() {
             }}
           />
           <Heading style={{ zIndex: "2" }}>Team 2</Heading>
-
-          {/* Punktzahl in der Mitte */}
           <Text
             style={{
               zIndex: "2",
@@ -120,9 +153,9 @@ export default function Home() {
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              fontSize: "20rem", // Sehr große Schriftgröße
-              fontWeight: "bold", // Fetter Text
-              color: "white", // Weiß für gute Lesbarkeit
+              fontSize: "20rem",
+              fontWeight: "bold",
+              color: "white",
             }}
           >
             {team2Score}

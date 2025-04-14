@@ -1,25 +1,55 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Background,
   Heading,
-  Text,
   Column,
   Row,
   Button,
   RevealFx,
 } from "@/once-ui/components";
-import { size } from "@floating-ui/react-dom";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function PointsManagement() {
-  const [team1Score, setTeam1Score] = React.useState(75);
-  const [team2Score, setTeam2Score] = React.useState(65);
+  // Lokaler State, der initial mit den Werten aus der Datenbank befüllt werden könnte
+  const [team1Score, setTeam1Score] = useState(75);
+  const [team2Score, setTeam2Score] = useState(65);
 
-  const incrementTeam1 = () => setTeam1Score((prev) => prev + 1);
-  const decrementTeam1 = () => setTeam1Score((prev) => prev - 1);
-  const incrementTeam2 = () => setTeam2Score((prev) => prev + 1);
-  const decrementTeam2 = () => setTeam2Score((prev) => prev - 1);
+  // Optional: Lese initiale Werte aus Supabase (falls noch nicht vorhanden, setze Standardwerte)
+  useEffect(() => {
+    async function fetchScores() {
+      const { data, error } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("id", "1")
+        .single();
+      if (data) {
+        setTeam1Score(data.team1Score);
+        setTeam2Score(data.team2Score);
+      } else if (error) {
+        console.error("Error fetching scores:", error);
+      }
+    }
+    fetchScores();
+  }, []);
+
+  // Funktion, um Scores zu aktualisieren
+  async function updateScores(newTeam1Score: any, newTeam2Score: any) {
+    setTeam1Score(newTeam1Score);
+    setTeam2Score(newTeam2Score);
+
+    const { error } = await supabase
+      .from("scores")
+      .update({ team1Score: newTeam1Score, team2Score: newTeam2Score })
+      .eq("id", 1);
+    if (error) console.error("Error updating scores:", error);
+  }
+
+  const incrementTeam1 = () => updateScores(team1Score + 1, team2Score);
+  const decrementTeam1 = () => updateScores(team1Score - 1, team2Score);
+  const incrementTeam2 = () => updateScores(team1Score, team2Score + 1);
+  const decrementTeam2 = () => updateScores(team1Score, team2Score - 1);
 
   return (
     <RevealFx
@@ -61,15 +91,11 @@ export default function PointsManagement() {
               height: "2rem",
             }}
           />
-          {/* Teamname und Punktzahl */}
-          <div style={{ zIndex: 2 }}>
-            <Heading>Team 1 - {team1Score}</Heading>
-          </div>
-          {/* Zwei riesige Buttons, mittig in der Spalte positioniert */}
+          <Heading style={{ zIndex: "2" }}>Team 1 - {team1Score}</Heading>
           <div
             style={{
               position: "absolute",
-              top: "50%",
+              top: "70%",
               left: "50%",
               transform: "translate(-50%, -50%)",
               display: "flex",
@@ -125,15 +151,11 @@ export default function PointsManagement() {
               height: "0.25rem",
             }}
           />
-          {/* Teamname und Punktzahl */}
-          <div style={{ zIndex: 2 }}>
-            <Heading>{team2Score} - Team 2</Heading>
-          </div>
-          {/* Zwei riesige Buttons, mittig in der Spalte positioniert */}
+          <Heading style={{ zIndex: "2" }}>{team2Score} - Team 2</Heading>
           <div
             style={{
               position: "absolute",
-              top: "50%",
+              top: "70%",
               left: "50%",
               transform: "translate(-50%, -50%)",
               display: "flex",
