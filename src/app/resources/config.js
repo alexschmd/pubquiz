@@ -54,9 +54,9 @@ const effects = {
 
 // default metadata
 const meta = {
-  title: "Once UI for Next.js",
+  title: "Pubquiz",
   description:
-    "An open-source design system and component library for Next.js that emphasizes easy styling and accessibility in UI development.",
+    "Eine Website für die Punkte von Miris Pubquiz.",
 };
 
 // default open graph data
