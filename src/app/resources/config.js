@@ -2,9 +2,9 @@ const baseURL = "demo.once-ui.com";
 
 // default customization applied to the HTML in the main layout.tsx
 const style = {
-  theme: "dark", // dark | light - not needed when using ThemeProvider
+  theme: "light", // dark | light - not needed when using ThemeProvider
   neutral: "gray", // sand | gray | slate
-  brand: "red", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
+  brand: "custom", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
   accent: "aqua", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
   solid: "color", // color | contrast | inverse
   solidStyle: "plastic", // flat | plastic

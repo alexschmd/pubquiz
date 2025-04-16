@@ -1,167 +1,271 @@
 "use client";
 
-import React, { useState, useEffect, SetStateAction } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Background,
   Heading,
-  Column,
-  Row,
+  Text,
   Button,
   RevealFx,
 } from "@/once-ui/components";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function PointsManagement() {
-  // Initialzustände für drei Teams
-  const [team1Score, setTeam1Score] = useState(0);
-  const [team2Score, setTeam2Score] = useState(0);
-  const [team3Score, setTeam3Score] = useState(0);
-  const [team1Name, setTeam1Name] = useState("");
-  const [team2Name, setTeam2Name] = useState("");
-  const [team3Name, setTeam3Name] = useState("");
+interface Team {
+  id: number; // ggf. anpassen (z. B. string)
+  name: string;
+  score: number;
+  tilt: number;
+  color_start: string;
+  color_end?: string;
+}
 
-  // useEffect zum initialen Laden der Daten und Einrichten des Realtime-Channels
+export default function PointsManagement() {
+  const [teams, setTeams] = useState<Team[]>([]);
+
+  // Teams werden aus der DB geladen und anhand der ID (aufsteigend) sortiert.
   useEffect(() => {
-    async function fetchScores() {
-      const { data, error } = await supabase
-        .from("scores")
-        .select("*")
-        .eq("id", 1)
-        .single();
+    async function fetchTeams() {
+      const { data, error } = await supabase.from("teams").select("*");
       if (error) {
-        console.error("Error fetching scores:", error);
+        console.error("Error fetching teams:", error);
       } else if (data) {
-        setTeam1Score(data.team1Score);
-        setTeam2Score(data.team2Score);
-        setTeam3Score(data.team3Score);
-        setTeam1Name(data.team1Name);
-        setTeam2Name(data.team2Name);
-        setTeam3Name(data.team3Name);
+        const sortedTeams = (data as Team[]).sort((a, b) => a.id - b.id);
+        setTeams(sortedTeams);
       }
     }
+    fetchTeams();
 
-    // Hole initiale Daten beim Laden der Seite
-    fetchScores();
-
-    // Richte den Realtime Channel ein, um Updates zu empfangen
+    // Realtime-Updates: Bei Änderungen wird der entsprechende Datensatz ersetzt und danach nach ID sortiert.
     const channel = supabase
-      .channel("scores-channel")
+      .channel("teams-channel")
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "scores",
-          filter: "id=eq.1",
-        },
+        { event: "UPDATE", schema: "public", table: "teams" },
         (payload) => {
-          const data = payload.new;
-          if (data) {
-            setTeam1Score(data.team1Score);
-            setTeam2Score(data.team2Score);
-            setTeam3Score(data.team3Score);
-            setTeam1Name(data.team1Name);
-            setTeam2Name(data.team2Name);
-            setTeam3Name(data.team3Name);
-          }
+          const updatedTeam = payload.new as Team;
+          setTeams((prevTeams) =>
+            prevTeams
+              .map((team) => (team.id === updatedTeam.id ? updatedTeam : team))
+              .sort((a, b) => a.id - b.id)
+          );
         }
       )
       .subscribe();
 
-    // Cleanup: entferne den Channel beim Unmount der Komponente
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
-  // Funktion, um die Scores aller Teams zu aktualisieren
-  async function updateScores(
-    newTeam1Score: number,
-    newTeam2Score: number,
-    newTeam3Score: number,
-    newTeam1Name: SetStateAction<string>,
-    newTeam2Name: SetStateAction<string>,
-    newTeam3Name: SetStateAction<string>
-  ) {
-    // Setze lokale States
-    setTeam1Score(newTeam1Score);
-    setTeam2Score(newTeam2Score);
-    setTeam3Score(newTeam3Score);
-    setTeam1Name(newTeam1Name);
-    setTeam2Name(newTeam2Name);
-    setTeam3Name(newTeam3Name);
-
+  // Funktion zum Aktualisieren des Scores eines Teams
+  async function updateTeamScore(teamId: number, newScore: number) {
+    setTeams((prevTeams) =>
+      prevTeams
+        .map((team) =>
+          team.id === teamId ? { ...team, score: newScore } : team
+        )
+        .sort((a, b) => a.id - b.id)
+    );
     const { error } = await supabase
-      .from("scores")
-      .update({
-        team1Score: newTeam1Score,
-        team2Score: newTeam2Score,
-        team3Score: newTeam3Score,
-        team1Name: newTeam1Name,
-        team2Name: newTeam2Name,
-        team3Name: newTeam3Name,
-      })
-      .eq("id", 1);
-    if (error) console.error("Error updating scores:", error);
+      .from("teams")
+      .update({ score: newScore })
+      .eq("id", teamId);
+    if (error) console.error("Error updating team score:", error);
   }
 
-  // Funktionen zur Score-Aktualisierung für jedes Team
-  const incrementTeam1 = () =>
-    updateScores(
-      team1Score + 1,
-      team2Score,
-      team3Score,
-      team1Name,
-      team2Name,
-      team3Name
-    );
-  const decrementTeam1 = () =>
-    updateScores(
-      team1Score - 1,
-      team2Score,
-      team3Score,
-      team1Name,
-      team2Name,
-      team3Name
-    );
+  /*
+    Layout-Regeln:
+    - 1–3 Teams: Alles in einer Zeile
+    - 4 Teams: [2, 2]
+    - 5 Teams: [2, 3]
+    - 6 Teams: [3, 3]
+    - 7 Teams: [3, 4]
+    - 8 Teams: [4, 4]
+    - 9 Teams: [4, 5] (obere Zeile 4, untere Zeile 5)
+    - 10 Teams: [5, 5]
+  */
+  let layout: number[] = [];
+  switch (teams.length) {
+    case 1:
+      layout = [1];
+      break;
+    case 2:
+      layout = [2];
+      break;
+    case 3:
+      layout = [3];
+      break;
+    case 4:
+      layout = [2, 2];
+      break;
+    case 5:
+      layout = [2, 3];
+      break;
+    case 6:
+      layout = [3, 3];
+      break;
+    case 7:
+      layout = [3, 4];
+      break;
+    case 8:
+      layout = [4, 4];
+      break;
+    case 9:
+      layout = [4, 5];
+      break;
+    case 10:
+      layout = [5, 5];
+      break;
+    default:
+      layout = [teams.length];
+      break;
+  }
 
-  const incrementTeam2 = () =>
-    updateScores(
-      team1Score,
-      team2Score + 1,
-      team3Score,
-      team1Name,
-      team2Name,
-      team3Name
-    );
-  const decrementTeam2 = () =>
-    updateScores(
-      team1Score,
-      team2Score - 1,
-      team3Score,
-      team1Name,
-      team2Name,
-      team3Name
-    );
+  // Teile das teams‑Array in Zeilen gemäß des Layout‑Arrays
+  let rows: Team[][] = [];
+  if (layout.length === 1) {
+    rows.push(teams);
+  } else {
+    let start = 0;
+    for (const count of layout) {
+      rows.push(teams.slice(start, start + count));
+      start += count;
+    }
+  }
 
-  const incrementTeam3 = () =>
-    updateScores(
-      team1Score,
-      team2Score,
-      team3Score + 1,
-      team1Name,
-      team2Name,
-      team3Name
+  // Berechne für jede Kachel die absolute Position und Größe im Container (100vw x 100vh)
+  type PositionedTile = {
+    team: Team;
+    rowIndex: number;
+    colIndex: number;
+    tileWidthPercent: number;
+    rowHeightPercent: number;
+  };
+
+  const positionedTiles: PositionedTile[] = [];
+  const totalRows = rows.length;
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const row = rows[rowIndex];
+    const columnsInRow = layout[rowIndex];
+    const rowHeightPercent = 100 / totalRows; // z. B. bei 2 Zeilen jeweils 50vh
+    const tileWidthPercent = 100 / columnsInRow; // Breite der Kachel in dieser Zeile
+    for (let colIndex = 0; colIndex < row.length; colIndex++) {
+      positionedTiles.push({
+        team: row[colIndex],
+        rowIndex,
+        colIndex,
+        tileWidthPercent,
+        rowHeightPercent,
+      });
+    }
+  }
+
+  // TeamTile-Komponente: Jede Kachel zeigt im Header (oben) den Teamnamen und den Score inline.
+  // Darunter folgen vertikal angeordnete, größere Plus-/Minus-Buttons.
+  const TeamTile = ({ item }: { item: PositionedTile }) => {
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: `${item.colIndex * item.tileWidthPercent}%`,
+          top: `${item.rowIndex * item.rowHeightPercent}%`,
+          width: `${item.tileWidthPercent}%`,
+          height: `${item.rowHeightPercent}%`,
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        <Background
+          position="absolute"
+          mask={{ x: 50, y: 0, radius: 1000 }}
+          gradient={{
+            display: true,
+            x: 50,
+            y: 0, // Gradient startet von oben
+            width: 100,
+            height: 80,
+            opacity: 90,
+            colorStart: item.team.color_start,
+            colorEnd: item.team.color_end || "page-background",
+          }}
+          grid={{
+            display: false,
+            opacity: 100,
+            width: "0.25rem",
+            color: "neutral-alpha-medium",
+            height: "0.25rem",
+          }}
+          style={{ top: 0, left: 0, width: "100%", height: "100%" }}
+        />
+        <div
+          style={{
+            position: "relative",
+            zIndex: 3,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "1rem",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Header: Teamname und inline Score nebeneinander */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <Heading
+              style={{
+                color: "white",
+                margin: 0,
+                padding: 0,
+                fontSize: "2rem",
+                zIndex: 2,
+              }}
+            >
+              {item.team.name} - {item.team.score}
+            </Heading>
+          </div>
+          {/* Button-Container: Buttons vertikal (übereinander) */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            <Button
+              onClick={() => updateTeamScore(item.team.id, item.team.score + 1)}
+              variant="primary"
+              prefixIcon="plus"
+              style={{
+                padding: "5rem",
+                fontSize: "1.8rem",
+                backgroundColor: item.team.color_start,
+              }}
+            />
+            <Button
+              onClick={() => updateTeamScore(item.team.id, item.team.score - 1)}
+              variant="primary"
+              prefixIcon="minus"
+              style={{
+                padding: "5rem",
+                fontSize: "1.8rem",
+                backgroundColor: item.team.color_start,
+              }}
+            />
+          </div>
+        </div>
+      </div>
     );
-  const decrementTeam3 = () =>
-    updateScores(
-      team1Score,
-      team2Score,
-      team3Score - 1,
-      team1Name,
-      team2Name,
-      team3Name
-    );
+  };
 
   return (
     <RevealFx
@@ -169,193 +273,19 @@ export default function PointsManagement() {
       delay={0}
       translateY={0}
       trigger={false}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100vw", height: "100vh" }}
     >
-      <Row style={{ height: "100%", width: "100%" }}>
-        {/* Spalte für Team 1 */}
-        <Column
-          style={{
-            width: "33.33%",
-            position: "relative",
-            padding: "16px",
-            overflow: "hidden",
-            textAlign: "center",
-          }}
-        >
-          <Background
-            position="absolute"
-            mask={{ x: 0, y: 0, radius: 100 }}
-            gradient={{
-              display: true,
-              x: 0,
-              y: 60,
-              width: 100,
-              height: 80,
-              tilt: 45,
-              opacity: 90,
-              colorStart: "brand-background-strong",
-              colorEnd: "page-background",
-            }}
-            grid={{
-              display: false,
-              opacity: 100,
-              width: "2rem",
-              color: "neutral-alpha-medium",
-              height: "2rem",
-            }}
-          />
-          <Heading style={{ zIndex: "2" }}>
-            {team1Name} - {team1Score}
-          </Heading>
-          <div className="buttonContainer">
-            <Button
-              onClick={incrementTeam1}
-              variant="primary"
-              size="l"
-              prefixIcon="plus"
-              style={{ padding: "10vw" }}
-            />
-            <Button
-              onClick={decrementTeam1}
-              variant="primary"
-              size="l"
-              prefixIcon="minus"
-              style={{ padding: "10vw" }}
-            />
-          </div>
-        </Column>
-
-        {/* Spalte für Team 2 */}
-        <Column
-          style={{
-            width: "33.33%",
-            position: "relative",
-            padding: "16px",
-            overflow: "hidden",
-            textAlign: "center",
-          }}
-        >
-          <Background
-            position="absolute"
-            mask={{ x: 50, y: 0, radius: 100 }}
-            gradient={{
-              display: true,
-              x: 50,
-              y: 60,
-              width: 100,
-              height: 80,
-              tilt: -45,
-              opacity: 90,
-              colorStart: "brand-background-medium",
-              colorEnd: "page-background",
-            }}
-            grid={{
-              display: false,
-              opacity: 100,
-              width: "0.25rem",
-              color: "neutral-alpha-medium",
-              height: "0.25rem",
-            }}
-          />
-          <Heading style={{ zIndex: "2" }}>
-            {team2Name} - {team2Score}
-          </Heading>
-          <div className="buttonContainer">
-            <Button
-              onClick={incrementTeam2}
-              variant="secondary"
-              size="l"
-              prefixIcon="plus"
-              style={{
-                padding: "10vw",
-                backgroundColor: "var(--scheme-blue-500)",
-              }}
-            />
-            <Button
-              onClick={decrementTeam2}
-              variant="secondary"
-              size="l"
-              prefixIcon="minus"
-              style={{
-                padding: "10vw",
-                backgroundColor: "var(--scheme-blue-500)",
-              }}
-            />
-          </div>
-        </Column>
-
-        {/* Spalte für Team 3 */}
-        <Column
-          style={{
-            width: "33.33%",
-            position: "relative",
-            padding: "16px",
-            overflow: "hidden",
-            textAlign: "center",
-          }}
-        >
-          <Background
-            position="absolute"
-            mask={{ x: 100, y: 0, radius: 100 }}
-            gradient={{
-              display: true,
-              x: 100,
-              y: 60,
-              width: 100,
-              height: 80,
-              tilt: 45,
-              opacity: 90,
-              colorStart: "accent-background-strong",
-              colorEnd: "page-background",
-            }}
-            grid={{
-              display: false,
-              opacity: 100,
-              width: "0.25rem",
-              color: "neutral-alpha-medium",
-              height: "0.25rem",
-            }}
-          />
-          <Heading style={{ zIndex: "2" }}>
-            {team3Name} - {team3Score}
-          </Heading>
-          <div className="buttonContainer">
-            <Button
-              onClick={incrementTeam3}
-              variant="secondary"
-              size="l"
-              prefixIcon="plus"
-              style={{
-                padding: "10vw",
-                backgroundColor: "var(--scheme-aqua-500)",
-              }}
-            />
-            <Button
-              onClick={decrementTeam3}
-              variant="secondary"
-              size="l"
-              prefixIcon="minus"
-              style={{
-                padding: "10vw",
-                backgroundColor: "var(--scheme-aqua-500)",
-              }}
-            />
-          </div>
-        </Column>
-      </Row>
-
-      {/* Eingebettetes CSS für vertikal zentrierte Buttons */}
-      <style jsx>{`
-        .buttonContainer {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-      `}</style>
+      <div
+        style={{
+          position: "relative",
+          width: "100vw",
+          height: "100vh",
+        }}
+      >
+        {positionedTiles.map((item) => (
+          <TeamTile key={item.team.id} item={item} />
+        ))}
+      </div>
     </RevealFx>
   );
 }

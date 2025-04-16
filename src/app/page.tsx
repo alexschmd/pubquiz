@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Background, Heading, Text, RevealFx } from "@/once-ui/components";
 import { motion, LayoutGroup } from "framer-motion";
 
-// Interface für einen Team-Datensatz – das Feld heißt "name"
+// Interface für einen Team-Datensatz – jedes Team hat individuelle Farbwerte
 interface Team {
   id: number; // ggf. anpassen (z. B. string)
   name: string;
@@ -28,8 +28,7 @@ export default function LandingPage() {
       if (error) {
         console.error("Error fetching teams:", error);
       } else if (data) {
-        const teamsData = data as Team[];
-        setTeams(sortTeams(teamsData));
+        setTeams(sortTeams(data as Team[]));
       }
     }
     fetchTeams();
@@ -145,77 +144,78 @@ export default function LandingPage() {
     }
   }
 
-  // Kachel-Komponente: absolute Positionierung und eigene layoutId für FLIP-Animationen
-  const TeamTile = ({ item }: { item: PositionedTile }) => (
-    <motion.div
-      layout
-      layoutId={`team-${item.team.id}`}
-      transition={{ layout: { duration: 0.5, type: "tween" } }}
-      style={{
-        position: "absolute",
-        left: `${item.colIndex * item.tileWidthPercent}%`,
-        top: `${item.rowIndex * item.rowHeightPercent}%`,
-        width: `${item.tileWidthPercent}%`,
-        height: `${item.rowHeightPercent}%`,
-        overflow: "hidden",
-        boxSizing: "border-box",
-      }}
-    >
-      <Background
-        position="absolute"
-        mask={{ x: 50, y: 0, radius: 100 }}
-        gradient={{
-          display: true,
-          x: 50,
-          y: 60,
-          width: 100,
-          height: 80,
-          tilt: item.team.tilt,
-          opacity: 90,
-          colorStart: item.team.color_start,
-          colorEnd: item.team.color_end || "page-background",
-        }}
-        grid={{
-          display: false,
-          opacity: 100,
-          width: "0.25rem",
-          color: "neutral-alpha-medium",
-          height: "0.25rem",
-        }}
-        style={{ top: 0, left: 0, width: "100%", height: "100%" }}
-      />
-      <div
+  // Kachel-Komponente: Absolute Positionierung, eigene layoutId und Verwendung der Background-Komponente
+  const TeamTile = ({ item }: { item: PositionedTile }) => {
+    return (
+      <motion.div
+        layout
+        layoutId={`team-${item.team.id}`}
+        transition={{ layout: { duration: 0.5, type: "tween" } }}
         style={{
-          position: "relative",
-          zIndex: 3,
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center",
-          padding: "16px",
+          position: "absolute",
+          left: `${item.colIndex * item.tileWidthPercent}%`,
+          top: `${item.rowIndex * item.rowHeightPercent}%`,
+          width: `${item.tileWidthPercent}%`,
+          height: `${item.rowHeightPercent}%`,
+          overflow: "hidden",
           boxSizing: "border-box",
         }}
       >
-        <Heading style={{ color: "white", margin: 0, padding: 0 }}>
-          {item.team.name}
-        </Heading>
-        <Text
+        <Background
+          position="absolute"
+          mask={{ x: 50, y: 0, radius: 1000 }}
+          // Hier wird jetzt explizit gradient.y auf 0 gesetzt, sodass der Farbverlauf von oben startet
+          gradient={{
+            display: true,
+            x: 50,
+            y: 0,
+            width: 100,
+            height: 80,
+            opacity: 90,
+            colorStart: item.team.color_start,
+            colorEnd: item.team.color_end || "page-background",
+          }}
+          grid={{
+            display: false,
+            opacity: 100,
+            width: "0.25rem",
+            color: "neutral-alpha-medium",
+            height: "0.25rem",
+          }}
+          style={{ top: 0, left: 0, width: "100%", height: "100%" }}
+        />
+        <div
           style={{
-            fontSize: "15rem",
-            fontWeight: "bold",
-            color: "white",
-            margin: 0,
-            padding: 0,
+            position: "relative",
+            zIndex: 3,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            boxSizing: "border-box",
           }}
         >
-          {item.team.score}
-        </Text>
-      </div>
-    </motion.div>
-  );
+          <Heading style={{ color: "white", margin: 0, padding: 0 }}>
+            {item.team.name}
+          </Heading>
+          <Text
+            style={{
+              fontSize: "18rem",
+              fontWeight: "bold",
+              color: "white",
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            {item.team.score}
+          </Text>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <RevealFx

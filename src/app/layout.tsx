@@ -98,9 +98,9 @@ export default function RootLayout({
                   const root = document.documentElement;
                   if (theme === 'system') {
                     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                    root.setAttribute('data-theme', isDark ? 'dark' : 'dark');
                   } else {
-                    root.setAttribute('data-theme', theme);
+                    root.setAttribute('data-theme', 'dark');
                   }
                 } catch (e) {
                   document.documentElement.setAttribute('data-theme', 'dark');
@@ -110,13 +110,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <ThemeProvider>
-        <ToastProvider>
-          <Column as="body" fillWidth margin="0" padding="0">
-            {children}
-          </Column>
-        </ToastProvider>
-      </ThemeProvider>
+      <ToastProvider>
+        <Column as="body" fillWidth margin="0" padding="0">
+          {children}
+        </Column>
+      </ToastProvider>
     </Flex>
   );
 }
