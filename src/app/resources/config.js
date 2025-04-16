@@ -54,9 +54,9 @@ const effects = {
 
 // default metadata
 const meta = {
-  title: "Pubquiz",
+  title: "Miri´s Pubquiz",
   description:
-    "Eine Website für die Punkte von Miris Pubquiz.",
+    "Eine Website damit Miri die Punkte beim ihrem Pubquiz verwalten kann.",
 };
 
 // default open graph data
