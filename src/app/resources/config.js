@@ -4,7 +4,7 @@ const baseURL = "demo.once-ui.com";
 const style = {
   theme: "dark", // dark | light - not needed when using ThemeProvider
   neutral: "gray", // sand | gray | slate
-  brand: "yellow", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
+  brand: "red", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
   accent: "aqua", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
   solid: "color", // color | contrast | inverse
   solidStyle: "plastic", // flat | plastic
@@ -55,8 +55,7 @@ const effects = {
 // default metadata
 const meta = {
   title: "Miri´s Pubquiz",
-  description:
-    "Eine Website damit Miri die Punkte beim ihrem Pubquiz verwalten kann.",
+  description: "Miri´s Pubquiz Leaderboard.",
 };
 
 // default open graph data
@@ -70,16 +69,9 @@ const og = {
 const schema = {
   logo: "",
   type: "Organization",
-  name: "Once UI",
+  name: "Pubquiz",
   description: meta.description,
-  email: "lorant@once-ui.com",
+  email: "mail@schmidalex.de",
 };
 
-// social links
-const social = {
-  twitter: "https://www.twitter.com/_onceui",
-  linkedin: "https://www.linkedin.com/company/once-ui/",
-  discord: "https://discord.com/invite/5EyAQ4eNdS",
-};
-
-export { baseURL, style, meta, og, schema, social, effects };
+export { baseURL, style, meta, og, schema, effects };
