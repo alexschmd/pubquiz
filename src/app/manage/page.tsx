@@ -59,6 +59,7 @@ export default function PointsManagement() {
 
   // Funktion zum Aktualisieren des Scores eines Teams
   async function updateTeamScore(teamId: number, newScore: number) {
+    // Optimistisches Update des UI-States
     setTeams((prevTeams) =>
       prevTeams
         .map((team) =>
@@ -66,11 +67,16 @@ export default function PointsManagement() {
         )
         .sort((a, b) => a.id - b.id)
     );
+
+    // Warten auf das Update in der Datenbank
     const { error } = await supabase
       .from("teams")
       .update({ score: newScore })
       .eq("id", teamId);
-    if (error) console.error("Error updating team score:", error);
+
+    if (error) {
+      console.error("Error updating team score:", error);
+    }
   }
 
   /*

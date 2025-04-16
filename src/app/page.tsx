@@ -164,7 +164,6 @@ export default function LandingPage() {
         <Background
           position="absolute"
           mask={{ x: 50, y: 0, radius: 1000 }}
-          // Hier wird jetzt explizit gradient.y auf 0 gesetzt, sodass der Farbverlauf von oben startet
           gradient={{
             display: true,
             x: 50,
@@ -190,28 +189,45 @@ export default function LandingPage() {
             zIndex: 3,
             width: "100%",
             height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            textAlign: "center",
             boxSizing: "border-box",
           }}
         >
-          <Heading style={{ color: "white", margin: 0, padding: 0 }}>
-            {item.team.name}
-          </Heading>
-          <Text
+          {/* Obere Zone für den Teamnamen */}
+          <div
             style={{
-              fontSize: "18rem",
-              fontWeight: "bold",
-              color: "white",
-              margin: 0,
-              padding: 0,
+              position: "absolute",
+              top: "0",
+              width: "100%",
+              padding: "0.5rem",
+              textAlign: "center",
             }}
           >
-            {item.team.score}
-          </Text>
+            <Heading style={{ color: "white", margin: 0, padding: 0 }}>
+              {item.team.name}
+            </Heading>
+          </div>
+
+          {/* Zone für den Score, hier zentriert im verbleibenden Platz */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: "17rem",
+                fontWeight: "bold",
+                color: "white",
+                margin: 0,
+                padding: 0,
+              }}
+            >
+              {item.team.score}
+            </Text>
+          </div>
         </div>
       </motion.div>
     );
