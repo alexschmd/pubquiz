@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import React from "react";
+import { useTeams } from "@/context/TeamsContext";
 import { Background, Heading, Text, RevealFx } from "@/once-ui/components";
 import { motion, LayoutGroup } from "framer-motion";
 
-// Interface für einen Team-Datensatz – jedes Team hat individuelle Farbwerte
 interface Team {
-  id: number; // ggf. anpassen (z. B. string)
+  id: number;
   name: string;
   score: number;
   tilt: number;
@@ -16,60 +15,14 @@ interface Team {
 }
 
 export default function LandingPage() {
-  const [teams, setTeams] = useState<Team[]>([]);
-
-  // Hilfsfunktion: Sortiert Teams absteigend nach Score
+  const { teams } = useTeams();
   const sortTeams = (teamsArray: Team[]) =>
     [...teamsArray].sort((a, b) => b.score - a.score);
 
-  useEffect(() => {
-    async function fetchTeams() {
-      const { data, error } = await supabase.from("teams").select("*");
-      if (error) {
-        console.error("Error fetching teams:", error);
-      } else if (data) {
-        setTeams(sortTeams(data as Team[]));
-      }
-    }
-    fetchTeams();
+  const sortedTeams = sortTeams(teams);
 
-    // Live-Update: Wenn sich in der DB etwas ändert, wird das betroffene Team ersetzt
-    const channel = supabase
-      .channel("teams-channel")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "teams" },
-        (payload) => {
-          const updatedTeam = payload.new as Team;
-          setTeams((prevTeams) =>
-            sortTeams(
-              prevTeams.map((team) =>
-                team.id === updatedTeam.id ? updatedTeam : team
-              )
-            )
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  /*  
-    Definiere das gewünschte Layout in Zeilen:
-    - 1–3 Teams: Alles in einer Zeile
-    - 4 Teams: [2, 2]
-    - 5 Teams: [2, 3]
-    - 6 Teams: [3, 3]
-    - 7 Teams: [3, 4]
-    - 8 Teams: [4, 4]
-    - 9 Teams: [4, 5] (obere Zeile 4, untere 5)
-    - 10 Teams: [5, 5]
-  */
   let layout: number[] = [];
-  switch (teams.length) {
+  switch (sortedTeams.length) {
     case 1:
       layout = [1];
       break;
@@ -101,23 +54,21 @@ export default function LandingPage() {
       layout = [5, 5];
       break;
     default:
-      layout = [teams.length];
+      layout = [sortedTeams.length];
       break;
   }
 
-  // Aufteilen des teams-Arrays in Zeilen gemäß des Layout-Arrays
   let rows: Team[][] = [];
   if (layout.length === 1) {
-    rows.push(teams);
+    rows.push(sortedTeams);
   } else {
     let start = 0;
     for (const count of layout) {
-      rows.push(teams.slice(start, start + count));
+      rows.push(sortedTeams.slice(start, start + count));
       start += count;
     }
   }
 
-  // Berechne für jede Kachel die Position und Größe im Container (100vw x 100vh)
   type PositionedTile = {
     team: Team;
     rowIndex: number;
@@ -131,8 +82,8 @@ export default function LandingPage() {
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const row = rows[rowIndex];
     const columnsInRow = layout[rowIndex];
-    const rowHeightPercent = 100 / totalRows; // z. B. 50% bei 2 Zeilen
-    const tileWidthPercent = 100 / columnsInRow; // Breite der Kachel in dieser Zeile
+    const rowHeightPercent = 100 / totalRows;
+    const tileWidthPercent = 100 / columnsInRow;
     for (let colIndex = 0; colIndex < row.length; colIndex++) {
       positionedTiles.push({
         team: row[colIndex],
@@ -144,7 +95,6 @@ export default function LandingPage() {
     }
   }
 
-  // Kachel-Komponente: Absolute Positionierung, eigene layoutId und Verwendung der Background-Komponente
   const TeamTile = ({ item }: { item: PositionedTile }) => {
     return (
       <motion.div
@@ -178,7 +128,7 @@ export default function LandingPage() {
             display: false,
             opacity: 100,
             width: "0.25rem",
-            color: "neutral-alpha-medium",
+          color: "neutral-alpha-medium",
             height: "0.25rem",
           }}
           style={{ top: 0, left: 0, width: "100%", height: "100%" }}
@@ -192,11 +142,10 @@ export default function LandingPage() {
             boxSizing: "border-box",
           }}
         >
-          {/* Obere Zone für den Teamnamen */}
           <div
             style={{
               position: "absolute",
-              top: "0",
+              top: 0,
               width: "100%",
               padding: "0.5rem",
               textAlign: "center",
@@ -206,8 +155,6 @@ export default function LandingPage() {
               {item.team.name}
             </Heading>
           </div>
-
-          {/* Zone für den Score, hier zentriert im verbleibenden Platz */}
           <div
             style={{
               display: "flex",

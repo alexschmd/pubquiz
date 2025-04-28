@@ -16,6 +16,7 @@ import { Meta, Schema } from "@/once-ui/modules";
 
 import { Geist } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
+import { TeamsProvider } from "@/context/TeamsContext";
 
 const primary = Geist({
   variable: "--font-primary",
@@ -58,6 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <TeamsProvider>
     <Flex
       suppressHydrationWarning
       as="html"
@@ -116,5 +118,6 @@ export default function RootLayout({
         </Column>
       </ToastProvider>
     </Flex>
+    </TeamsProvider>
   );
 }
