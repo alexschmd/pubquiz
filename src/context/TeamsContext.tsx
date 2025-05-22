@@ -9,19 +9,21 @@ interface Team {
   score: number;
   tilt: number;
   color_start: string;
-  color_end?: string;
 }
 
 // Beispiel-Definition der Start-Teams; passe Namen, Farben & IDs nach Bedarf an
 const DEFAULT_TEAMS: Team[] = [
-  { id: 1, name: "Team A", score: 0, tilt: 0, color_start: "#ff0000", color_end: "#ffa0a0" },
-  { id: 2, name: "Team B", score: 0, tilt: 0, color_start: "#00ff00", color_end: "#a0ffa0" },
-  { id: 3, name: "Team C", score: 0, tilt: 0, color_start: "#0000ff", color_end: "#a0a0ff" },
+  { id: 1, name: "Team A", score: 0, tilt: 0, color_start: "#ff0000" },
+  { id: 2, name: "Team B", score: 0, tilt: 0, color_start: "#00ff00" },
+  { id: 3, name: "Team C", score: 0, tilt: 0, color_start: "#0000ff" },
 ];
 
 type TeamsContextType = {
   teams: Team[];
   updateScore: (teamId: number, delta: number) => void;
+  updateTeamDetails: (teamId: number, newDetails: Partial<Team>) => void;
+  addTeam: () => void;
+  deleteTeam: (teamId: number) => void;
 };
 
 const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
@@ -71,11 +73,43 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const updateTeamDetails = (teamId: number, newDetails: Partial<Team>) => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId ? { ...team, ...newDetails } : team
+      )
+    );
+  };
+
+  const addTeam = () => {
+    setTeams((prevTeams) => {
+      if (prevTeams.length >= 10) {
+        // Optional: Zeige eine Meldung oder verhindere das Hinzufügen stillschweigend
+        console.warn("Maximale Teamanzahl erreicht.");
+        return prevTeams;
+      }
+      const newId = prevTeams.length > 0 ? Math.max(...prevTeams.map(t => t.id)) + 1 : 1;
+      const newTeam: Team = {
+        id: newId,
+        name: `Team ${newId}`,
+        score: 0,
+        tilt: 0,
+        color_start: `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`, // Zufällige Farbe
+      };
+      return [...prevTeams, newTeam];
+    });
+  };
+
+  const deleteTeam = (teamId: number) => {
+    setTeams((prevTeams) => prevTeams.filter(team => team.id !== teamId));
+  };
+
   return (
-    <TeamsContext.Provider value={{ teams, updateScore }}>
+    <TeamsContext.Provider value={{ teams, updateScore, updateTeamDetails, addTeam, deleteTeam }}>
       {children}
     </TeamsContext.Provider>
   );
+
 }
 
 // Hook zum einfachen Zugriff

@@ -5,7 +5,7 @@ const style = {
   theme: "light", // dark | light - not needed when using ThemeProvider
   neutral: "gray", // sand | gray | slate
   brand: "custom", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
-  accent: "aqua", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
+  accent: "indigo", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
   solid: "color", // color | contrast | inverse
   solidStyle: "plastic", // flat | plastic
   border: "playful", // rounded | playful | conservative

@@ -2,7 +2,19 @@
 
 import React from "react";
 import { useTeams } from "@/context/TeamsContext";
-import { Background, Heading, Text, Button, RevealFx } from "@/once-ui/components";
+import {
+  Background,
+  Heading,
+  Text,
+  Button,
+  RevealFx,
+  Dialog,
+  Input,
+  ColorInput,
+  ToastProvider,
+  useToast,
+} from "@/once-ui/components";
+import { AiOutlineEdit } from "react-icons/ai";
 
 interface Team {
   id: number;
@@ -10,11 +22,83 @@ interface Team {
   score: number;
   tilt: number;
   color_start: string;
-  color_end?: string;
 }
 
-export default function PointsManagement() {
-  const { teams, updateScore } = useTeams();
+function PointsManagementContent() {
+  const { teams, updateScore, updateTeamDetails, addTeam, deleteTeam } =
+    useTeams();
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingTeams, setEditingTeams] = React.useState<Team[]>([]);
+  const { addToast } = useToast();
+
+  React.useEffect(() => {
+    if (isDialogOpen) {
+      setEditingTeams(JSON.parse(JSON.stringify(teams))); // Deep copy
+    }
+  }, [isDialogOpen, teams]);
+
+  const handleInputChange = <K extends keyof Team>(
+    teamId: number,
+    field: K,
+    value: Team[K]
+  ) => {
+    setEditingTeams((prev) =>
+      prev.map((t) => {
+        if (t.id === teamId) {
+          const newTeamData = { ...t, [field]: value };
+
+          return newTeamData;
+        }
+        return t;
+      })
+    );
+  };
+
+  const handleSaveChanges = () => {
+    // Update existing or newly added teams that are still in editingTeams
+    editingTeams.forEach((editingTeam) => {
+      const originalTeam = teams.find((t) => t.id === editingTeam.id);
+      if (originalTeam) {
+        // Team exists, check for changes
+        if (JSON.stringify(originalTeam) !== JSON.stringify(editingTeam)) {
+          updateTeamDetails(editingTeam.id, {
+            name: editingTeam.name,
+            color_start: editingTeam.color_start,
+          });
+        }
+      } else {
+        // This case should ideally not happen if addTeam directly updates context
+        // but as a safeguard, or if addTeam only modified editingTeams initially:
+        // addTeam(); // This would need to be more specific if new teams are only in editingTeams
+      }
+    });
+
+    // Handle deletions: teams in original `teams` but not in `editingTeams` were deleted
+    teams.forEach((originalTeam) => {
+      if (!editingTeams.find((et) => et.id === originalTeam.id)) {
+        deleteTeam(originalTeam.id);
+      }
+    });
+
+    setIsDialogOpen(false);
+    addToast({
+      message: "Die Teams wurden erfolgreich aktualisiert.",
+      variant: "success",
+    });
+  };
+
+  const handleAddTeam = () => {
+    if (editingTeams.length < 10) {
+      // Add to context first, then update local editing state
+      addTeam(); // This will trigger a re-render and teams context update
+      // The useEffect for isDialogOpen will re-sync editingTeams from the updated teams context
+    }
+  };
+
+const handleDeleteTeam = (teamId: number) => {
+  deleteTeam(teamId);
+  setEditingTeams((prev) => prev.filter((t) => t.id !== teamId));
+};
 
   // Sort by ID for display
   const sortedTeams = [...teams].sort((a, b) => a.id - b.id);
@@ -116,7 +200,7 @@ export default function PointsManagement() {
           height: 80,
           opacity: 90,
           colorStart: item.team.color_start,
-          colorEnd: item.team.color_end || "page-background",
+          colorEnd: "page-background", // Removed item.team.color_end as it's no longer part of the Team interface
         }}
         grid={{
           display: false,
@@ -203,10 +287,93 @@ export default function PointsManagement() {
       style={{ width: "100vw", height: "100vh" }}
     >
       <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          variant="secondary"
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 100,
+          }}
+        >
+          <AiOutlineEdit />
+        </Button>
         {positionedTiles.map((item) => (
           <TeamTile key={item.team.id} item={item} />
         ))}
       </div>
+      <Dialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        title="Teams bearbeiten"
+        footer={
+          <>
+            <Button onClick={() => setIsDialogOpen(false)} variant="secondary">
+              Abbrechen
+            </Button>
+            <Button onClick={handleSaveChanges} variant="primary">
+              Speichern
+            </Button>
+          </>
+        }
+      >
+        <div style={{ padding: "1rem", maxHeight: "70vh", overflowY: "auto" }}>
+          {editingTeams.map((team) => (
+            <div
+              key={team.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem",
+                marginBottom: "1rem",
+              }}
+            >
+              <Input
+                id={`team-${team.id}-name`}
+                type="text"
+                value={team.name}
+                label="Team Name"
+                onChange={(e) =>
+                  handleInputChange(team.id, "name", e.target.value)
+                }
+                style={{ flexGrow: 1, boxSizing: "border-box" }}
+              />
+              <ColorInput
+                id={`team-${team.id}-color-start`}
+                value={team.color_start}
+                label="Start Farbe"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleInputChange(team.id, "color_start", e.target.value)
+                }
+                style={{ boxSizing: "border-box", width: "18rem" }}
+              />
+              <Button
+                onClick={() => handleDeleteTeam(team.id)}
+                variant="danger"
+                prefixIcon="close"
+              />
+            </div>
+          ))}
+          {editingTeams.length < 10 && (
+            <Button
+              onClick={handleAddTeam}
+              variant="secondary"
+              style={{ marginTop: "1rem", width: "100%" }}
+              label="Neues Team hinzufügen"
+              prefixIcon="plus"
+            />
+          )}
+        </div>
+      </Dialog>
     </RevealFx>
+  );
+}
+
+export default function PointsManagement() {
+  return (
+    <ToastProvider>
+      <PointsManagementContent />
+    </ToastProvider>
   );
 }
