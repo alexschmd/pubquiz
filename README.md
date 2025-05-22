@@ -1,68 +1,46 @@
-# Once UI for Next.js
+# Pubquiz Dashboard
 
-A thoughtfully crafted design system that eliminates complexity while maximizing flexibility.
+Ein Echtzeit-Quiz-Management-Dashboard, gebaut mit [Once UI](https://once-ui.com/) und Next.js (Once UI-Framework), das nahtloses Tracking und Anpassen von Team-Punkten ermöglicht.
+
+## Funktionen
+
+- **Dynamische Team-Verwaltung**: Füge Quiz-Teams hinzu, bearbeite oder lösche sie direkt – alle Änderungen werden in `localStorage` gespeichert.  
+- **Anpassbare Team-Farben**: Weise Teams Startfarben über einen intuitiven Farbwähler zu.  
+- **Echtzeit-Punktestand**: Erhöhe oder verringere Punkte direkt im Dashboard, die Teams werden automatisch nach Punktestand sortiert.  
+- **Responsives Rasterlayout**: Das Layout passt sich flexibel an jede Anzahl von Teams (1–10) an.  
+- **Landing Page**: Zeigt den Punktestand an und soll für die Teilnehmer sichtbar sein.
+- **Manage Page**: Wird vom Admin benutzt um die Teams und ihre Punkte zuverwalten.
 
 
-![Once UI](public/images/cover.jpg)
+## Erste Schritte
 
-# Features
-
-Start building your Next.js app in minutes with: 
-* **A robust token and style system** that simplifies customization and ensures consistency. 
-* **A copy-and-paste component library** that integrates seamlessly into your project.
-* **Interactive documentation** to apply your branding and set component properties.
-
-# Demo
-[demo.once-ui.com](https://demo.once-ui.com)
-
-![Once UI](public/images/demo.png)
-
-# Getting started
-Clone the starter template from GitHub.
 ```bash
-git clone https://github.com/once-ui-system/nextjs-starter.git
+# Dependencies installieren
+npm install
+
+# Projekt
+npm run dev
 ```
 
-You can also deploy it directly to Vercel.
+## Produktion & Deployment
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fonce-ui-system%2Fnextjs-starter&redirect-url=https%3A%2F%2Fonce-ui.com%2Fdocs%2F)
+```bash
+# Dependencies installieren
+npm install
 
+# Projekt builden 
+npm run build
 
-View the step-by-step guide at [once-ui.com/docs](https://once-ui.com/docs).
+# Build starten
+npm run start
+```
 
-# Documentation
-[once-ui.com/docs](https://once-ui.com/docs)
+## Aufrufen
 
-# Authors
-Connect with us!
+```bash
+# Scoreboard im Browser öffnen
+http://localhost:3000
 
-Lorant One: [Site](https://lorant.one), [Threads](https://www.threads.net/@lorant.one), [LinkedIn](https://www.linkedin.com/in/lorant-one/)  
-Zsofia Komaromi: [Site](https://zsofia.pro), [Threads](https://www.threads.net/@zsofia_kom), [LinkedIn](https://www.linkedin.com/in/zsofiakomaromi/)
-
-# Get involved
-- Join the [Design Engineers Club](https://discord.com/invite/5EyAQ4eNdS) on Discord to connect with designers, developers and share your projects.
-- Report a [bug](https://github.com/once-ui-system/nextjs-starter/issues/new?labels=bug&template=bug_report.md).
-- Submit a [feature request](https://github.com/once-ui-system/nextjs-starter/issues/new?labels=feature%20request&template=feature_request.md).
-
-# License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-# Sponsors
-
-[github.com/sponsors/once-ui-system](https://github.com/sponsors/once-ui-system)
-
-Become a sponsor and help us continue to develop and maintain this project.
-
-# Once UI for Figma
-
-Once UI is also available for Figma.  
-Design and prototype entire products from scratch in hours. Use the same tokens and components as the Next.js design system.
-
-Start designing: [once-ui.com/figma](https://once-ui.com/figma)
-
-# Once UI Pro
-
-Take your project further with Once UI Pro. Get access to complete templates, fully designed pages, and modular blocks that make building apps even faster.
-
-Explore Pro: [once-ui.com/pro](https://once-ui.com/pro)
+# Manage Page im Browser öffnen
+http://localhost:3000/manage
+```
