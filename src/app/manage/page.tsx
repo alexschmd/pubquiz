@@ -319,7 +319,7 @@ const handleDeleteTeam = (teamId: number) => {
         }
       >
         <div style={{ padding: "1rem", maxHeight: "70vh", overflowY: "auto" }}>
-          {editingTeams.map((team) => (
+          {sortedTeams.map((team) => (
             <div
               key={team.id}
               style={{
@@ -355,7 +355,7 @@ const handleDeleteTeam = (teamId: number) => {
               />
             </div>
           ))}
-          {editingTeams.length < 10 && (
+          {teams.length < 10 && (
             <Button
               onClick={handleAddTeam}
               variant="secondary"
