@@ -319,43 +319,46 @@ const handleDeleteTeam = (teamId: number) => {
         }
       >
         <div style={{ padding: "1rem", maxHeight: "70vh", overflowY: "auto" }}>
-          {sortedTeams.map((team) => (
-            <div
-              key={team.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <Input
-                id={`team-${team.id}-name`}
-                type="text"
-                value={team.name}
-                label="Team Name"
-                onChange={(e) =>
-                  handleInputChange(team.id, "name", e.target.value)
-                }
-                style={{ flexGrow: 1, boxSizing: "border-box" }}
-              />
-              <ColorInput
-                id={`team-${team.id}-color-start`}
-                value={team.color_start}
-                label="Start Farbe"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleInputChange(team.id, "color_start", e.target.value)
-                }
-                style={{ boxSizing: "border-box", width: "18rem" }}
-              />
-              <Button
-                onClick={() => handleDeleteTeam(team.id)}
-                variant="danger"
-                prefixIcon="close"
-              />
-            </div>
-          ))}
-          {teams.length < 10 && (
+          {editingTeams
+            .slice()
+            .sort((a, b) => a.id - b.id)
+            .map((team) => (
+              <div
+                key={team.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <Input
+                  id={`team-${team.id}-name`}
+                  type="text"
+                  value={team.name}
+                  label="Team Name"
+                  onChange={(e) =>
+                    handleInputChange(team.id, "name", e.target.value)
+                  }
+                  style={{ flexGrow: 1, boxSizing: "border-box" }}
+                />
+                <ColorInput
+                  id={`team-${team.id}-color-start`}
+                  value={team.color_start}
+                  label="Start Farbe"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleInputChange(team.id, "color_start", e.target.value)
+                  }
+                  style={{ boxSizing: "border-box", width: "18rem" }}
+                />
+                <Button
+                  onClick={() => handleDeleteTeam(team.id)}
+                  variant="danger"
+                  prefixIcon="close"
+                />
+              </div>
+            ))}
+          {editingTeams.length < 10 && (
             <Button
               onClick={handleAddTeam}
               variant="secondary"
