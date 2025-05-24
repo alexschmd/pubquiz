@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTeams } from "@/context/TeamsContext";
-import { Background, Heading, Text, RevealFx } from "@/once-ui/components";
+import { Background, Heading, Text, RevealFx, Button, Badge } from "@/once-ui/components";
 import { motion, LayoutGroup } from "framer-motion";
 
 interface Team {
@@ -188,13 +188,59 @@ export default function LandingPage() {
       trigger={false}
       style={{ width: "100vw", height: "100vh" }}
     >
-      <LayoutGroup>
-        <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-          {positionedTiles.map((item) => (
-            <TeamTile key={item.team.id} item={item} />
-          ))}
+      {teams.length === 0 ? (
+        <div
+          style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "2rem",
+            backgroundColor: "#111",
+            color: "white",
+            textAlign: "center",
+          }}
+        >
+          <Background
+            position="absolute"
+            mask={{ x: 0, y: 0, radius: 1000 }}
+            gradient={{
+              display: true,
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 100,
+              opacity: 90,
+              colorStart: "#4b0082",
+              colorEnd: "page-background",
+            }}
+            style={{ top: 0, left: 0, width: "100%", height: "100%" }}
+          />
+          <Heading style={{ zIndex: 2 }}>
+            Es wurden noch keine Teams hinzugefügt.
+          </Heading>
+          <Badge
+            arrow={false}
+            href="/manage"
+            onBackground="brand-medium"
+            background="brand-medium"
+          >
+            Zu den Einstellungen
+          </Badge>
         </div>
-      </LayoutGroup>
+      ) : (
+        <LayoutGroup>
+          <div
+            style={{ position: "relative", width: "100vw", height: "100vh" }}
+          >
+            {positionedTiles.map((item) => (
+              <TeamTile key={item.team.id} item={item} />
+            ))}
+          </div>
+        </LayoutGroup>
+      )}
     </RevealFx>
   );
 }
