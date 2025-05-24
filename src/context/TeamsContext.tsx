@@ -12,11 +12,7 @@ interface Team {
 }
 
 // Beispiel-Definition der Start-Teams; passe Namen, Farben & IDs nach Bedarf an
-const DEFAULT_TEAMS: Team[] = [
-  { id: 1, name: "Team A", score: 0, tilt: 0, color_start: "#ff0000" },
-  { id: 2, name: "Team B", score: 0, tilt: 0, color_start: "#00ff00" },
-  { id: 3, name: "Team C", score: 0, tilt: 0, color_start: "#0000ff" },
-];
+const DEFAULT_TEAMS: Team[] = [];
 
 type TeamsContextType = {
   teams: Team[];

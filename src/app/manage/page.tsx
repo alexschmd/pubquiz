@@ -54,49 +54,65 @@ function PointsManagementContent() {
     );
   };
 
-  const handleSaveChanges = () => {
-    // Update existing or newly added teams that are still in editingTeams
-    editingTeams.forEach((editingTeam) => {
-      const originalTeam = teams.find((t) => t.id === editingTeam.id);
-      if (originalTeam) {
-        // Team exists, check for changes
-        if (JSON.stringify(originalTeam) !== JSON.stringify(editingTeam)) {
-          updateTeamDetails(editingTeam.id, {
-            name: editingTeam.name,
-            color_start: editingTeam.color_start,
-          });
-        }
-      } else {
-        // This case should ideally not happen if addTeam directly updates context
-        // but as a safeguard, or if addTeam only modified editingTeams initially:
-        // addTeam(); // This would need to be more specific if new teams are only in editingTeams
+const handleSaveChanges = () => {
+  // Aktualisiere oder ergänze Teams
+  editingTeams.forEach((editingTeam) => {
+    const originalTeam = teams.find((t) => t.id === editingTeam.id);
+    if (originalTeam) {
+      // Bestehendes Team aktualisieren, wenn es Änderungen gab
+      if (JSON.stringify(originalTeam) !== JSON.stringify(editingTeam)) {
+        updateTeamDetails(editingTeam.id, {
+          name: editingTeam.name,
+          color_start: editingTeam.color_start,
+        });
       }
-    });
-
-    // Handle deletions: teams in original `teams` but not in `editingTeams` were deleted
-    teams.forEach((originalTeam) => {
-      if (!editingTeams.find((et) => et.id === originalTeam.id)) {
-        deleteTeam(originalTeam.id);
-      }
-    });
-
-    setIsDialogOpen(false);
-    addToast({
-      message: "Die Teams wurden erfolgreich aktualisiert.",
-      variant: "success",
-    });
-  };
-
-  const handleAddTeam = () => {
-    if (editingTeams.length < 10) {
-      // Add to context first, then update local editing state
-      addTeam(); // This will trigger a re-render and teams context update
-      // The useEffect for isDialogOpen will re-sync editingTeams from the updated teams context
+    } else {
+      // Neues Team hinzufügen
+      updateTeamDetails(editingTeam.id, {
+        name: editingTeam.name,
+        color_start: editingTeam.color_start,
+      });
+      addTeam();
     }
-  };
+  });
+
+  // Entferne Teams, die im Dialog gelöscht wurden
+  teams.forEach((originalTeam) => {
+    if (!editingTeams.find((et) => et.id === originalTeam.id)) {
+      deleteTeam(originalTeam.id);
+    }
+  });
+
+  setIsDialogOpen(false);
+  addToast({
+    message: "Die Teams wurden erfolgreich aktualisiert.",
+    variant: "success",
+  });
+};
+
+const handleAddTeam = () => {
+  if (editingTeams.length < 10) {
+    const newId =
+      editingTeams.length > 0
+        ? Math.max(...editingTeams.map((t) => t.id)) + 1
+        : 1;
+
+    const newTeam: Team = {
+      id: newId,
+      name: `Team ${newId}`,
+      score: 0,
+      tilt: 0,
+      color_start: `#${Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0")}`,
+    };
+
+    setEditingTeams((prev) => [...prev, newTeam]);
+  }
+};
 
 const handleDeleteTeam = (teamId: number) => {
-  deleteTeam(teamId);
+  //deleteTeam(teamId);
   setEditingTeams((prev) => prev.filter((t) => t.id !== teamId));
 };
 
