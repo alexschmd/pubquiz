@@ -37,6 +37,15 @@ function PointsManagementContent() {
     }
   }, [isDialogOpen, teams]);
 
+  React.useEffect(() => {
+    if (teams.length === 0) {
+      const timer = setTimeout(() => {
+        setIsDialogOpen(true);
+      }, 500); // 200ms Verzögerung
+      return () => clearTimeout(timer);
+    }
+  }, [teams]);
+
   const handleInputChange = <K extends keyof Team>(
     teamId: number,
     field: K,
@@ -54,67 +63,63 @@ function PointsManagementContent() {
     );
   };
 
-const handleSaveChanges = () => {
-  // Aktualisiere oder ergänze Teams
-  editingTeams.forEach((editingTeam) => {
-    const originalTeam = teams.find((t) => t.id === editingTeam.id);
-    if (originalTeam) {
-      // Bestehendes Team aktualisieren, wenn es Änderungen gab
-      if (JSON.stringify(originalTeam) !== JSON.stringify(editingTeam)) {
+  const handleSaveChanges = () => {
+    editingTeams.forEach((editingTeam) => {
+      const originalTeam = teams.find((t) => t.id === editingTeam.id);
+      if (originalTeam) {
+        if (JSON.stringify(originalTeam) !== JSON.stringify(editingTeam)) {
+          updateTeamDetails(editingTeam.id, {
+            name: editingTeam.name,
+            color_start: editingTeam.color_start,
+          });
+        }
+      } else {
+        addTeam();
         updateTeamDetails(editingTeam.id, {
           name: editingTeam.name,
           color_start: editingTeam.color_start,
         });
       }
-    } else {
-      // Neues Team hinzufügen
-      updateTeamDetails(editingTeam.id, {
-        name: editingTeam.name,
-        color_start: editingTeam.color_start,
-      });
-      addTeam();
+    });
+
+    teams.forEach((originalTeam) => {
+      if (!editingTeams.find((et) => et.id === originalTeam.id)) {
+        deleteTeam(originalTeam.id);
+      }
+    });
+
+    setIsDialogOpen(false);
+    addToast({
+      message: "Die Teams wurden erfolgreich aktualisiert.",
+      variant: "success",
+    });
+  };
+
+  const handleAddTeam = () => {
+    if (editingTeams.length < 10) {
+      const newId =
+        editingTeams.length > 0
+          ? Math.max(...editingTeams.map((t) => t.id)) + 1
+          : 1;
+
+      const newTeam: Team = {
+        id: newId,
+        name: `Team ${newId}`,
+        score: 0,
+        tilt: 0,
+        color_start: `#${Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, "0")}`,
+      };
+
+      setEditingTeams((prev) => [...prev, newTeam]);
     }
-  });
+  };
 
-  // Entferne Teams, die im Dialog gelöscht wurden
-  teams.forEach((originalTeam) => {
-    if (!editingTeams.find((et) => et.id === originalTeam.id)) {
-      deleteTeam(originalTeam.id);
-    }
-  });
-
-  setIsDialogOpen(false);
-  addToast({
-    message: "Die Teams wurden erfolgreich aktualisiert.",
-    variant: "success",
-  });
-};
-
-const handleAddTeam = () => {
-  if (editingTeams.length < 10) {
-    const newId =
-      editingTeams.length > 0
-        ? Math.max(...editingTeams.map((t) => t.id)) + 1
-        : 1;
-
-    const newTeam: Team = {
-      id: newId,
-      name: `Team ${newId}`,
-      score: 0,
-      tilt: 0,
-      color_start: `#${Math.floor(Math.random() * 16777215)
-        .toString(16)
-        .padStart(6, "0")}`,
-    };
-
-    setEditingTeams((prev) => [...prev, newTeam]);
-  }
-};
-
-const handleDeleteTeam = (teamId: number) => {
-  //deleteTeam(teamId);
-  setEditingTeams((prev) => prev.filter((t) => t.id !== teamId));
-};
+  const handleDeleteTeam = (teamId: number) => {
+    //deleteTeam(teamId);
+    setEditingTeams((prev) => prev.filter((t) => t.id !== teamId));
+  };
 
   // Sort by ID for display
   const sortedTeams = [...teams].sort((a, b) => a.id - b.id);
