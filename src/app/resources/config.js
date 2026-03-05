@@ -54,8 +54,8 @@ const effects = {
 
 // default metadata
 const meta = {
-  title: "Miri´s Pubquiz",
-  description: "Miri´s Pubquiz Leaderboard.",
+  title: "Pubquiz",
+  description: "Pubquiz Leaderboard.",
 };
 
 // default open graph data
