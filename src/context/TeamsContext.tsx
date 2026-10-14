@@ -1,116 +1,85 @@
-"use client";
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-// Interface wie gehabt
-interface Team {
-  id: number;
-  name: string;
-  score: number;
-  tilt: number;
-  color_start: string;
-}
-
-// Beispiel-Definition der Start-Teams; passe Namen, Farben & IDs nach Bedarf an
-const DEFAULT_TEAMS: Team[] = [];
-
-type TeamsContextType = {
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { parseTeams, type Team } from "../lib/teams";
+interface TeamsState {
   teams: Team[];
-  updateScore: (teamId: number, delta: number) => void;
-  updateTeamDetails: (teamId: number, newDetails: Partial<Team>) => void;
-  addTeam: () => void;
-  deleteTeam: (teamId: number) => void;
-};
-
-const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
-
+  ready: boolean;
+  error: string | null;
+  updateScore: (id: number, delta: number) => void;
+  saveTeams: (teams: Team[]) => boolean;
+}
+const Context = createContext<TeamsState | null>(null);
 export function TeamsProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<Team[]>([]);
-
-  // 1) Initial aus localStorage laden
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    const stored = localStorage.getItem("teams");
-    if (stored) {
-      setTeams(JSON.parse(stored));
-    } else {
-      setTeams(DEFAULT_TEAMS);
-      localStorage.setItem("teams", JSON.stringify(DEFAULT_TEAMS));
+    try {
+      setTeams(parseTeams(localStorage.getItem("teams")));
+    } catch {
+      setError(
+        "Gespeicherte Teams konnten nicht geladen werden. Die vorhandenen Daten wurden nicht überschrieben.",
+      );
     }
-  }, []);
-
-  // 2) Immer wenn sich teams ändern, in localStorage schreiben
-  useEffect(() => {
-    localStorage.setItem("teams", JSON.stringify(teams));
-  }, [teams]);
-
-  // 3) Sync across browser tabs/windows when localStorage is updated elsewhere
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "teams" && e.newValue) {
-        setTeams(JSON.parse(e.newValue) as Team[]);
+    setReady(true);
+    function sync(event: StorageEvent) {
+      if (event.key !== "teams" && event.key !== null) return;
+      try {
+        setTeams(parseTeams(event.newValue));
+        setError(null);
+      } catch {
+        setError(
+          "Teamdaten aus einem anderen Tab konnten nicht geladen werden.",
+        );
       }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-    };
+    }
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
   }, []);
-
-  // 3) Funktion, mit der jede Page den Score ändern kann
-  const updateScore = (teamId: number, delta: number) => {
-    setTeams((prev) =>
-      prev
-        .map((t) =>
-          t.id === teamId
-            ? { ...t, score: t.score + delta }
-            : t
-        )
-        .sort((a, b) => b.score - a.score)
+  function persist(next: Team[]) {
+    try {
+      localStorage.setItem("teams", JSON.stringify(next));
+      setError(null);
+    } catch {
+      setError(
+        "Änderungen konnten nicht gespeichert werden. Bitte Browserspeicher prüfen.",
+      );
+      return false;
+    }
+    return true;
+  }
+  function saveTeams(draft: Team[]) {
+    if (!ready) return false;
+    // Keep scores changed in another tab while the editor was open.
+    const next = draft.map((team) => ({
+      ...team,
+      score:
+        teams.find((current) => current.id === team.id)?.score ?? team.score,
+    }));
+    if (!persist(next)) return false;
+    setTeams(next);
+    return true;
+  }
+  function updateScore(id: number, delta: number) {
+    if (!ready) return;
+    const next = teams.map((team) =>
+      team.id === id ? { ...team, score: team.score + delta } : team,
     );
-  };
-
-  const updateTeamDetails = (teamId: number, newDetails: Partial<Team>) => {
-    setTeams((prevTeams) =>
-      prevTeams.map((team) =>
-        team.id === teamId ? { ...team, ...newDetails } : team
-      )
-    );
-  };
-
-  const addTeam = () => {
-    setTeams((prevTeams) => {
-      if (prevTeams.length >= 10) {
-        // Optional: Zeige eine Meldung oder verhindere das Hinzufügen stillschweigend
-        console.warn("Maximale Teamanzahl erreicht.");
-        return prevTeams;
-      }
-      const newId = prevTeams.length > 0 ? Math.max(...prevTeams.map(t => t.id)) + 1 : 1;
-      const newTeam: Team = {
-        id: newId,
-        name: `Team ${newId}`,
-        score: 0,
-        tilt: 0,
-        color_start: `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`, // Zufällige Farbe
-      };
-      return [...prevTeams, newTeam];
-    });
-  };
-
-  const deleteTeam = (teamId: number) => {
-    setTeams((prevTeams) => prevTeams.filter(team => team.id !== teamId));
-  };
-
+    if (persist(next)) setTeams(next);
+  }
   return (
-    <TeamsContext.Provider value={{ teams, updateScore, updateTeamDetails, addTeam, deleteTeam }}>
+    <Context.Provider value={{ teams, ready, error, saveTeams, updateScore }}>
       {children}
-    </TeamsContext.Provider>
+    </Context.Provider>
   );
-
 }
-
-// Hook zum einfachen Zugriff
 export function useTeams() {
-  const ctx = useContext(TeamsContext);
-  if (!ctx) throw new Error("useTeams must be inside TeamsProvider");
-  return ctx;
+  const state = useContext(Context);
+  if (!state) throw new Error("TeamsProvider fehlt");
+  return state;
 }

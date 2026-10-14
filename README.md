@@ -1,46 +1,40 @@
 # Pubquiz Dashboard
 
-Ein Echtzeit-Quiz-Management-Dashboard, gebaut mit [Once UI](https://once-ui.com/) und Next.js (Once UI-Framework), das nahtloses Tracking und Anpassen von Team-Punkten ermöglicht.
+Scoreboard und Teamverwaltung mit TanStack Start, React, Vite und eigenem CSS. Motion animiert die Sortierung im Scoreboard; die Einstellung für reduzierte Bewegung wird berücksichtigt.
 
-## Funktionen
+## Entwicklung
 
-- **Dynamische Team-Verwaltung**: Füge Quiz-Teams hinzu, bearbeite oder lösche sie direkt – alle Änderungen werden in `localStorage` gespeichert.  
-- **Anpassbare Team-Farben**: Weise Teams Startfarben über einen intuitiven Farbwähler zu.  
-- **Echtzeit-Punktestand**: Erhöhe oder verringere Punkte direkt im Dashboard, die Teams werden automatisch nach Punktestand sortiert.  
-- **Responsives Rasterlayout**: Das Layout passt sich flexibel an jede Anzahl von Teams (1–10) an.  
-- **Landing Page**: Zeigt den Punktestand an und soll für die Teilnehmer sichtbar sein.
-- **Manage Page**: Wird vom Admin benutzt um die Teams und ihre Punkte zuverwalten.
+Node.js ab 22.12 und npm werden benötigt.
 
-
-## Erste Schritte
-
-```bash
-# Dependencies installieren
-npm install
-
-# Projekt
+```sh
+npm ci
 npm run dev
 ```
 
-## Produktion & Deployment
+- Scoreboard: http://localhost:3000
+- Verwaltung: http://localhost:3000/manage
 
-```bash
-# Dependencies installieren
-npm install
+Bis zu zehn Teams können angelegt, benannt, eingefärbt und gelöscht werden. Die Verwaltung vergibt oder entfernt einzelne Punkte. Das Scoreboard sortiert nach Punkten.
 
-# Projekt builden 
+## Daten
+
+Teams bleiben unter dem bisherigen Schlüssel `teams` im localStorage erhalten. Bestehende Daten werden beim Start übernommen. Tabs derselben Origin synchronisieren sich über Browser-Storage-Events. Verschiedene Geräte oder Browser teilen keinen Spielstand. Beim Wechsel von Domain oder Port müssen die Daten separat übertragen werden.
+
+## Produktion
+
+```sh
 npm run build
-
-# Build starten
-npm run start
+npm start
 ```
 
-## Aufrufen
+Nitro erzeugt den Node-Server unter `.output/server/index.mjs` und die öffentlichen Assets unter `.output/public`. Der Standardport ist 3000; mit `PORT` lässt er sich ändern. Das gesamte `.output`-Verzeichnis wird für das Deployment benötigt.
 
-```bash
-# Scoreboard im Browser öffnen
-http://localhost:3000
+## Prüfungen
 
-# Manage Page im Browser öffnen
-http://localhost:3000/manage
+```sh
+npm run typecheck
+npm test
+npm run build
 ```
+
+Die Tests prüfen Datenübernahme, Speicherung, Tab-Synchronisierung, beschädigte Bestandsdaten und Rasteraufteilung für ein bis zehn Teams.
