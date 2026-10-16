@@ -1389,3 +1389,22 @@ h1 {
 .question-session .question-timer-controls, .question-session .question-screen-switch { margin: 0; padding: 0; border: 0; }
 .question-session .question-screen-switch { display: flex; flex-wrap: wrap; gap: 8px; }
 .question-session { margin-bottom: 24px; }
+
+.scoreboard-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #101116;
+}
+.scoreboard-preview-frame {
+  position: absolute;
+  inset: 0;
+  width: 1280px;
+  height: 720px;
+  border: 0;
+  transform-origin: top left;
+  pointer-events: none;
+}

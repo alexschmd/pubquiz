@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { beforeEach, afterEach, expect, test, vi } from "vitest";
 import {
   cleanup,
   fireEvent,
@@ -8,7 +8,17 @@ import {
 } from "@testing-library/react";
 import { QuestionComposer } from "./QuestionComposer";
 import { QuestionProvider, QUESTION_KEY } from "../context/QuestionContext";
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+});
 afterEach(() => {
+  vi.unstubAllGlobals();
   cleanup();
   localStorage.clear();
 });

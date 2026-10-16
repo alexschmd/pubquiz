@@ -1,3 +1,4 @@
+import { ScoreboardPreview } from "./ScoreboardPreview";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { QuestionFormEditor } from "./QuestionFormEditor";
 import { ButtonGroup, ButtonGroupText } from "./ui/button-group";
@@ -56,11 +57,7 @@ import {
   serializeQuestions,
   type PreparedQuestion,
 } from "../lib/questions";
-import {
-  useQuestion,
-  useRemainingSeconds,
-  formatCountdown,
-} from "../context/QuestionContext";
+import { useQuestion, useRemainingSeconds } from "../context/QuestionContext";
 const BANK_KEY = "pubquiz-question-bank";
 export function QuestionComposer() {
   const {
@@ -205,23 +202,7 @@ export function QuestionComposer() {
               : "Punktestand auf dem Scoreboard"}
           </span>
         </div>
-        {question ? (
-          <div className="question-session-content">
-            <div>
-              <span className="question-session-number">
-                Frage {question.number ?? 1}
-              </span>
-              <h3>{question.text}</h3>
-            </div>
-            <strong className="question-session-time">
-              {formatCountdown(remaining)}
-            </strong>
-          </div>
-        ) : (
-          <p className="question-session-empty">
-            Wähle unten eine Frage und starte sie, wenn es losgehen soll.
-          </p>
-        )}
+        <ScoreboardPreview />
         <div className="question-timer-controls">
           <Button
             variant="outline"
