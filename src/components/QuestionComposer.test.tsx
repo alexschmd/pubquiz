@@ -124,20 +124,34 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     JSON.parse(localStorage.getItem("pubquiz-question-bank")!).questions[0]
       .correctOptions,
   ).toEqual([1]);
-  fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
+  expect(screen.queryByRole("button", { name: "Lösung aufdecken" })).toBe(null);
   fireEvent.click(
     screen.getByRole("button", { name: "Antwort A als richtig markieren" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
+  const expired = {
+    ...JSON.parse(localStorage.getItem(QUESTION_KEY)!),
+    endsAt: Date.now() - 1000,
+  };
+  delete expired.pausedRemainingMs;
+  localStorage.setItem(QUESTION_KEY, JSON.stringify(expired));
+  fireEvent(
+    window,
+    new StorageEvent("storage", {
+      key: QUESTION_KEY,
+      newValue: JSON.stringify(expired),
+    }),
+  );
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Lösung aufdecken" }),
+  );
   const solution = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(solution.solutionRevealed).toBe(true);
   expect(solution.correctOptions).toEqual([0, 1]);
   expect(solution.revealedOptions).toEqual([0, 1]);
-  expect(solution.endsAt).toBe(initial.endsAt);
-  fireEvent.click(screen.getByRole("button", { name: "Lösung verbergen" }));
-  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).solutionRevealed).toBe(
-    false,
-  );
+  expect(solution.endsAt).toBe(expired.endsAt);
+  expect(
+    screen.getByRole("button", { name: "Zurück zum Leaderboard" }),
+  ).toBeTruthy();
 });
 
 test("copies an import prompt from the questions dialog", async () => {

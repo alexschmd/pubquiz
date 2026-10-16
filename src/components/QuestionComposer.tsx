@@ -140,7 +140,9 @@ export function QuestionComposer() {
   const mainAction = !selectedIsActive
     ? "Frage starten"
     : remaining === 0
-      ? "Zurück zum Leaderboard"
+      ? question?.correctOptions?.length && !question.solutionRevealed
+        ? "Lösung aufdecken"
+        : "Zurück zum Leaderboard"
       : "Frage abbrechen";
   const visibleAnswers = selectedIsActive
     ? (question?.revealedOptions ?? [])
@@ -431,26 +433,6 @@ export function QuestionComposer() {
           </div>
         </div>
       )}
-      {!!chosen?.options.length && (
-        <div className="solution-control">
-          <p>
-            {selectedIsActive
-              ? question?.solutionRevealed
-                ? "Die richtigen Antworten sind auf dem Scoreboard hervorgehoben."
-                : "Zeigt alle Antworten und hebt die richtigen hervor."
-              : "Mit dem Auge legst du fest, welche Antworten beim Start sichtbar sind. Die Haken markieren die richtigen Antworten."}
-          </p>
-          <Button
-            variant="outline"
-            disabled={!selectedIsActive || !question?.correctOptions?.length}
-            onClick={() => revealSolution(!question?.solutionRevealed)}
-          >
-            {question?.solutionRevealed && selectedIsActive
-              ? "Lösung verbergen"
-              : "Lösung aufdecken"}
-          </Button>
-        </div>
-      )}
       <div className="question-control-bar">
         <div className="question-start-controls">
           <Button
@@ -461,6 +443,10 @@ export function QuestionComposer() {
             onClick={() => {
               if (mainAction === "Frage abbrechen") {
                 setAbortOpen(true);
+                return;
+              }
+              if (mainAction === "Lösung aufdecken") {
+                revealSolution(true);
                 return;
               }
               if (mainAction === "Zurück zum Leaderboard") {
@@ -480,6 +466,8 @@ export function QuestionComposer() {
           >
             {mainAction === "Frage abbrechen" ? (
               <Square data-icon="inline-start" />
+            ) : mainAction === "Lösung aufdecken" ? (
+              <Eye data-icon="inline-start" />
             ) : mainAction === "Frage starten" ? (
               <Play data-icon="inline-start" />
             ) : (
