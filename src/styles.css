@@ -1409,3 +1409,6 @@ h1 {
   transform-origin: top left;
   pointer-events: none;
 }
+.question-sequence { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.question-sequence > [data-slot="select-trigger"] { flex: 1; min-width: 0; }
+.question-sequence > button[data-slot="button"] { flex-shrink: 0; }

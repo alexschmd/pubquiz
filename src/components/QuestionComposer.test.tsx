@@ -44,6 +44,21 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.change(screen.getByLabelText("Zeit für Frage 4"), {
     target: { value: "30" },
   });
+  expect(
+    screen
+      .getByRole("button", { name: "Vorherige Frage" })
+      .hasAttribute("disabled"),
+  ).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Nächste Frage" }));
+  expect(screen.getByLabelText("Zeit für Frage 5")).toBeTruthy();
+  expect(
+    screen
+      .getByRole("button", { name: "Nächste Frage" })
+      .hasAttribute("disabled"),
+  ).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Vorherige Frage" }));
+  expect(screen.getByLabelText("Zeit für Frage 4")).toBeTruthy();
+  expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
   fireEvent.click(screen.getByRole("combobox"));
   const option = await screen.findByRole("option", {
     name: "Frage 5: Zweite Frage?",

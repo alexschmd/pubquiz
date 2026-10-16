@@ -19,6 +19,7 @@ import {
   Copy,
   Check,
   ChevronRight,
+  ChevronLeft,
   Pause,
   Play,
   RotateCcw,
@@ -186,41 +187,39 @@ export function QuestionComposer() {
         )}
       </div>
       <section className="question-session" aria-label="Laufende Frage">
-        <div className="question-session-heading" role="status">
-          <span>
-            {question
-              ? remaining === 0
-                ? "Zeit abgelaufen"
-                : question.pausedRemainingMs !== undefined
-                  ? "Pausiert"
-                  : "Frage läuft"
-              : "Bereit für die nächste Frage"}
-          </span>
-          <span>
-            {question && question.visible !== false
-              ? "Frage auf dem Scoreboard"
-              : "Punktestand auf dem Scoreboard"}
-          </span>
-        </div>
         <ScoreboardPreview />
         <div className="question-timer-controls">
           <Button
             variant="outline"
             disabled={!question || remaining === 0}
             onClick={toggleTimer}
+            size="icon"
+            aria-label={
+              question?.pausedRemainingMs !== undefined
+                ? "Zeit fortsetzen"
+                : "Zeit stoppen"
+            }
+            title={
+              question?.pausedRemainingMs !== undefined
+                ? "Zeit fortsetzen"
+                : "Zeit stoppen"
+            }
           >
             {question?.pausedRemainingMs !== undefined ? (
               <Play data-icon="inline-start" />
             ) : (
               <Pause data-icon="inline-start" />
             )}
-            {question?.pausedRemainingMs !== undefined
-              ? "Zeit fortsetzen"
-              : "Zeit stoppen"}
           </Button>
-          <Button variant="outline" disabled={!question} onClick={restartTimer}>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Zeit neu starten"
+            title="Zeit neu starten"
+            disabled={!question}
+            onClick={restartTimer}
+          >
             <RotateCcw data-icon="inline-start" />
-            Zeit neu starten
           </Button>
         </div>
         <div className="question-screen-switch">
@@ -244,29 +243,51 @@ export function QuestionComposer() {
             <FieldLabel htmlFor="question-number">
               Nächste Frage vorbereiten
             </FieldLabel>
-            <Select
-              value={String(selected)}
-              onValueChange={(value) => {
-                if (value !== null) setSelected(Number(value));
-              }}
-              items={questions.map((item, index) => ({
-                value: String(index),
-                label: `Frage ${item.number}: ${item.text}`,
-              }))}
-            >
-              <SelectTrigger id="question-number" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {questions.map((item, index) => (
-                    <SelectItem key={item.number} value={String(index)}>
-                      Frage {item.number}: {item.text}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <div className="question-sequence">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Vorherige Frage"
+                title="Vorherige Frage"
+                disabled={selected === 0}
+                onClick={() => setSelected((index) => index - 1)}
+              >
+                <ChevronLeft />
+              </Button>
+              <Select
+                value={String(selected)}
+                onValueChange={(value) => {
+                  if (value !== null) setSelected(Number(value));
+                }}
+                items={questions.map((item, index) => ({
+                  value: String(index),
+                  label: `Frage ${item.number}: ${item.text}`,
+                }))}
+              >
+                <SelectTrigger id="question-number" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {questions.map((item, index) => (
+                      <SelectItem key={item.number} value={String(index)}>
+                        Frage {item.number}: {item.text}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Nächste Frage"
+                title="Nächste Frage"
+                disabled={selected >= questions.length - 1}
+                onClick={() => setSelected((index) => index + 1)}
+              >
+                <ChevronRight />
+              </Button>
+            </div>
           </Field>
           <Field className="question-compact-duration">
             <FieldLabel htmlFor="selected-duration">Zeit</FieldLabel>
