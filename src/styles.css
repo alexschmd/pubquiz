@@ -1240,3 +1240,62 @@ h1 {
     transition: none;
   }
 }
+.score-tile > .team-standing:not(.team-background) {
+  position: absolute;
+  bottom: clamp(12px, 2.5vh, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #ffffff1c;
+  border-radius: 999px;
+  background: #10111685;
+  color: #b8b8c2;
+  font-size: clamp(12px, 1.3vw, 20px);
+  font-weight: 550;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+}
+.team-standing svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  stroke-width: 1.7;
+}
+.score-tile > .team-standing[data-place="1"] {
+  color: #f3d183;
+  border-color: #e8bd6745;
+  background: #49371670;
+}
+.score-tile > .team-standing[data-place="2"] {
+  color: #d7e1f0;
+  border-color: #becde345;
+  background: #2f394a70;
+}
+.score-tile > .team-standing[data-place="3"] {
+  color: #e5b195;
+  border-color: #cb916a45;
+  background: #49302370;
+}
+.standing-marker {
+  opacity: 0.5;
+  font-weight: 400;
+}
+.score-tile[data-place="1"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px #f3d18335;
+}
+@media (max-height: 500px) {
+  .score-tile > .team-standing:not(.team-background) {
+    bottom: 8px;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+}

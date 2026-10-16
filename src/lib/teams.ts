@@ -48,3 +48,16 @@ export function teamRows(teams: Team[]): Team[][] {
   const split = Math.floor(teams.length / 2);
   return [teams.slice(0, split), teams.slice(split)];
 }
+
+/** Competition ranking: equal scores share a place (1, 1, 3). */
+export function teamRanks(teams: Team[]): Map<number, number> {
+  const sorted = [...teams].sort((a, b) => b.score - a.score || a.id - b.id);
+  let rank = 0;
+  return new Map(
+    sorted.map((team, index) => {
+      if (index === 0 || team.score !== sorted[index - 1].score)
+        rank = index + 1;
+      return [team.id, rank];
+    }),
+  );
+}

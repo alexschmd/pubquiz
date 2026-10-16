@@ -1,3 +1,4 @@
+import { TeamStanding } from "../components/TeamStanding";
 import type { ReactNode } from "react";
 import { useQuestion } from "../context/QuestionContext";
 import { QuestionDisplay } from "../components/QuestionDisplay";
@@ -16,7 +17,7 @@ import {
   useIsPresent,
 } from "motion/react";
 import { useTeams } from "../context/TeamsContext";
-import { teamRows } from "../lib/teams";
+import { teamRows, teamRanks } from "../lib/teams";
 export const Route = createFileRoute("/")({
   component: Scoreboard,
   head: () => ({ meta: [{ title: "Scoreboard | Pubquiz" }] }),
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/")({
 function Scoreboard() {
   const { teams, ready, error } = useTeams();
   const { question, ready: questionReady } = useQuestion();
+  const ranks = teamRanks(teams);
   if (!ready || !questionReady)
     return <main className="empty" aria-label="Punktestand" aria-busy="true" />;
   return (
@@ -79,6 +81,7 @@ function Scoreboard() {
                                 },
                               }}
                               className="score-tile"
+                              data-place={ranks.get(team.id)}
                               key={team.id}
                             >
                               <TeamBackground color={team.color_start} />
@@ -86,6 +89,7 @@ function Scoreboard() {
                               <p className="score">
                                 <SlidingNumber value={team.score} />
                               </p>
+                              <TeamStanding rank={ranks.get(team.id)!} />
                             </m.article>
                           ))}
                         </div>
