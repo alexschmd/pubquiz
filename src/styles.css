@@ -567,3 +567,29 @@ h1 {
 .management .management-tiles {
   padding: 0;
 }
+
+.management-breadcrumb .quiz-wordmark span {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+.management-tile {
+  padding: 16px;
+}
+.management-tile .team-identity {
+  min-height: 24px;
+}
+.management-tile .tile-score {
+  margin: 16px 0;
+}
+.management-tile .tile-score output {
+  font-size: 38px;
+  letter-spacing: -1.5px;
+}
+@media (max-width: 480px) {
+  .management-tile {
+    padding: 12px;
+  }
+  .management-tile .tile-score {
+    margin: 14px 0;
+  }
+}
