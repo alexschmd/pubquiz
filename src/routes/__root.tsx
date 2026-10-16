@@ -6,6 +6,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TeamsProvider } from "../context/TeamsContext";
+import "../ui.css";
 import "../styles.css";
 export const Route = createRootRoute({
   head: () => ({

@@ -30,3 +30,9 @@ Browser inspection confirmed the reveal moves from mask-position 100% / blur 8px
 Added an independent Motion-based rolling-digit component for scoreboard scores, with one spring per decimal place, stable place keys, a static initial value, negative signs and a reduced-motion fallback. Legacy fractional scores remain plain text. Assistive technology receives the actual number rather than all ten digit faces.
 
 Browser checks covered 9 → 10, 10 → 0, 0 → -1, -1 → 100 and 100 → 99. Typecheck, regression tests and production build pass. React Doctor reports the same two reviewed warnings (77/100), with no new findings. No shadcn.io source or additional dependencies were used.
+
+## Management UI
+
+Installed official shadcn/ui (Base UI / Nova), Tailwind v4, and focused Button, Dialog, Input, Field, Table, Alert and Empty components. Replaced gradient management cards with a compact team table and stable score controls. The editor uses a controlled accessible dialog, labeled inputs, and a scrollable team list. Styling is neutral; team colors are small markers. Mobile layout prioritizes names and score controls.
+
+Browser smoke checks verified adding/saving a team and persisting score changes, plus desktop/mobile layouts and dialog display. Typecheck, four regression tests and production build pass. React Doctor remains at 77/100 with the existing two reviewed warnings. CLI-generated utility imports were corrected to the local `cn` helper.

@@ -1,180 +1,290 @@
-import { TeamBackground } from "../components/TeamBackground";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import {
+  ArrowUpRight,
+  Minus,
+  Plus,
+  Settings2,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { Button } from "../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Field, FieldGroup, FieldLabel } from "../components/ui/field";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "../components/ui/empty";
 import { useTeams } from "../context/TeamsContext";
 import { createTeam, MAX_TEAMS, type Team } from "../lib/teams";
 export const Route = createFileRoute("/manage")({ component: Manage });
 function Manage() {
   const { teams, ready, error, updateScore, saveTeams } = useTeams();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Team[]>([]);
   const [message, setMessage] = useState("");
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(""), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
   function edit() {
     setDraft(teams.map((team) => ({ ...team })));
-    dialog.current?.showModal();
+    setOpen(true);
   }
   function change(id: number, patch: Partial<Team>) {
     setDraft((current) =>
       current.map((team) => (team.id === id ? { ...team, ...patch } : team)),
     );
   }
+  function score(team: Team, delta: number) {
+    updateScore(team.id, delta);
+    setMessage(
+      `${team.name}: ${delta > 0 ? "Punkt hinzugefügt" : "Punkt abgezogen"}.`,
+    );
+  }
   return (
-    <main className={`manage${ready ? " reveal-fx reveal-fast" : ""}`}>
-      <header>
+    <main className="management">
+      <div className="management-topbar">
+        <Link to="/" className="quiz-wordmark">
+          pubquiz<span>/</span>
+        </Link>
+        <span>Spielleitung</span>
+      </div>
+      <header className="management-heading">
         <div>
-          <p className="eyebrow">PUBQUIZ · SPIELLEITUNG</p>
-          <h1>Alles im Blick.</h1>
+          <h1>Punktestand</h1>
+          <p>Teams verwalten und Punkte vergeben.</p>
         </div>
-        <nav>
-          <Link
-            className="button secondary"
-            to="/"
-            target="_blank"
-            rel="noopener"
-          >
-            Scoreboard öffnen ↗
-          </Link>
-          <button disabled={!ready} onClick={edit}>
-            Teams bearbeiten
-          </button>
-        </nav>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link to="/" target="_blank" rel="noopener" />}
+        >
+          <span>Scoreboard öffnen</span>
+          <ArrowUpRight data-icon="inline-end" />
+        </Button>
       </header>
       {error && (
-        <p role="alert" className="notice">
-          {error}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
-      <p role="status" className="status">
-        {message}
-      </p>
-      {!ready ? (
-        <p>Teams werden geladen …</p>
-      ) : teams.length === 0 ? (
-        <section className="empty">
-          <h2>Dein Quiz beginnt mit den Teams.</h2>
-          <p>
-            Bis zu zehn Teams, individuelle Farben und ein gemeinsamer
-            Punktestand.
-          </p>
-          <button onClick={edit}>Erstes Team anlegen</button>
-        </section>
-      ) : (
-        <section className="manage-grid" aria-label="Teams">
-          {[...teams]
-            .sort((a, b) => a.id - b.id)
-            .map((team) => (
-              <article
-                className="team-card"
-                key={team.id}
-                style={{ borderTopColor: team.color_start }}
-              >
-                <TeamBackground color={team.color_start} />
-                <h2>{team.name}</h2>
-                <p className="manage-score">
-                  {team.score}
-                  <span>Punkte</span>
-                </p>
-                <div className="score-controls">
-                  <button
-                    className="secondary"
-                    aria-label={`${team.name}: einen Punkt abziehen`}
-                    onClick={() => updateScore(team.id, -1)}
-                  >
-                    −
-                  </button>
-                  <button
-                    aria-label={`${team.name}: einen Punkt hinzufügen`}
-                    onClick={() => updateScore(team.id, 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </article>
-            ))}
-        </section>
-      )}
-      <dialog ref={dialog} aria-labelledby="editor-title">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (saveTeams(draft)) {
-              dialog.current?.close();
-              setMessage("Teams aktualisiert.");
-            }
-          }}
-        >
-          <h2 id="editor-title">Teams bearbeiten</h2>
-          <p className="muted">Namen und Farben für deinen Quizabend.</p>
-          <div className="editor-list">
-            {draft.map((team) => (
-              <div className="editor-row" key={team.id}>
-                <label>
-                  Teamname
-                  <input
-                    required
-                    maxLength={60}
-                    value={team.name}
-                    onChange={(event) =>
-                      change(team.id, { name: event.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Farbe
-                  <input
-                    type="color"
-                    value={team.color_start}
-                    onChange={(event) =>
-                      change(team.id, { color_start: event.target.value })
-                    }
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="secondary delete"
-                  aria-label={`${team.name} löschen`}
-                  onClick={() =>
-                    setDraft((current) =>
-                      current.filter((item) => item.id !== team.id),
-                    )
-                  }
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+      <section className="team-sheet" aria-label="Teamverwaltung">
+        <div className="sheet-heading">
+          <div>
+            <h2>Teams</h2>
+            <span>{ready ? `${teams.length} von ${MAX_TEAMS}` : "…"}</span>
           </div>
-          <button
-            type="button"
-            className="secondary add-team"
-            disabled={draft.length >= MAX_TEAMS}
-            onClick={() =>
-              setDraft((current) => [
-                ...current,
-                createTeam([...teams, ...current]),
-              ])
-            }
+          <Button variant="ghost" disabled={!ready} onClick={edit}>
+            <Settings2 data-icon="inline-start" />
+            Bearbeiten
+          </Button>
+        </div>
+        {!ready ? (
+          <div className="management-loading" aria-busy="true">
+            Teams werden geladen …
+          </div>
+        ) : teams.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <Users className="mx-auto size-6 text-muted-foreground" />
+              <EmptyTitle>Noch keine Teams</EmptyTitle>
+              <EmptyDescription>
+                Lege die Teams für deinen Quizabend an.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={edit}>
+                <Plus data-icon="inline-start" />
+                Team anlegen
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-14 pl-6">Nr.</TableHead>
+                <TableHead>Team</TableHead>
+                <TableHead className="text-right">Punkte</TableHead>
+                <TableHead className="w-32 pr-6">
+                  <span className="sr-only">Punkte ändern</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...teams]
+                .sort((a, b) => a.id - b.id)
+                .map((team, index) => (
+                  <TableRow key={team.id}>
+                    <TableCell className="pl-6 text-muted-foreground tabular-nums">
+                      {String(index + 1).padStart(2, "0")}
+                    </TableCell>
+                    <TableCell>
+                      <div className="team-identity">
+                        <span
+                          className="team-swatch"
+                          style={{ background: team.color_start }}
+                        />
+                        <span>{team.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <output
+                        className="team-points"
+                        aria-label={`${team.name}: Punkte`}
+                      >
+                        {team.score}
+                      </output>
+                    </TableCell>
+                    <TableCell className="pr-6">
+                      <div className="point-stepper">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label={`${team.name}: einen Punkt abziehen`}
+                          onClick={() => score(team, -1)}
+                        >
+                          <Minus />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label={`${team.name}: einen Punkt hinzufügen`}
+                          onClick={() => score(team, 1)}
+                        >
+                          <Plus />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+      <div className="management-footnote">
+        <span>Änderungen werden automatisch gespeichert.</span>
+        <span role="status" className="sr-only">
+          {message}
+        </span>
+        <span>Max. 10 Teams</span>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <form
+            id="team-editor"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (saveTeams(draft)) {
+                setOpen(false);
+                setMessage("Teams gespeichert.");
+              }
+            }}
           >
-            + Team hinzufügen ({draft.length}/{MAX_TEAMS})
-          </button>
-          <footer>
-            <button
+            <DialogHeader>
+              <DialogTitle>Teams bearbeiten</DialogTitle>
+              <DialogDescription>
+                Namen und Farben ändern oder Teams hinzufügen.
+              </DialogDescription>
+            </DialogHeader>
+            <FieldGroup className="my-6 max-h-[50dvh] overflow-y-auto pr-1">
+              {draft.map((team) => (
+                <div key={team.id} className="team-editor-row">
+                  <Field>
+                    <FieldLabel htmlFor={`name-${team.id}`}>
+                      Teamname
+                    </FieldLabel>
+                    <Input
+                      id={`name-${team.id}`}
+                      required
+                      maxLength={60}
+                      value={team.name}
+                      onChange={(event) =>
+                        change(team.id, { name: event.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field className="w-12 shrink-0">
+                    <FieldLabel htmlFor={`color-${team.id}`}>Farbe</FieldLabel>
+                    <Input
+                      id={`color-${team.id}`}
+                      type="color"
+                      value={team.color_start}
+                      onChange={(event) =>
+                        change(team.id, { color_start: event.target.value })
+                      }
+                    />
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`${team.name} löschen`}
+                    onClick={() =>
+                      setDraft((current) =>
+                        current.filter((item) => item.id !== team.id),
+                      )
+                    }
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              ))}
+            </FieldGroup>
+            <Button
               type="button"
-              className="secondary"
-              onClick={() => dialog.current?.close()}
+              variant="outline"
+              disabled={draft.length >= MAX_TEAMS}
+              onClick={() =>
+                setDraft((current) => [
+                  ...current,
+                  createTeam([...teams, ...current]),
+                ])
+              }
+            >
+              <Plus data-icon="inline-start" />
+              Team hinzufügen
+              <span className="text-muted-foreground">
+                {draft.length}/{MAX_TEAMS}
+              </span>
+            </Button>
+          </form>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
             >
               Abbrechen
-            </button>
-            <button type="submit">Speichern</button>
-          </footer>
-        </form>
-      </dialog>
+            </Button>
+            <Button type="submit" form="team-editor">
+              Änderungen speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
