@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { QuestionComposer } from "./QuestionComposer";
 import { QuestionProvider, QUESTION_KEY } from "../context/QuestionContext";
@@ -95,7 +96,6 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
   expect(screen.getByRole("combobox")).toBeTruthy();
-  fireEvent.click(screen.getByText("Frage beenden", { selector: "button" }));
   fireEvent.click(screen.getByRole("button", { name: "Alle anzeigen" }));
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   expect(
@@ -200,7 +200,7 @@ test("edits imported questions and multiple correct answers in form fields", asy
   ).toContain("(2*) (3) (4*)");
 });
 
-test("advances an expired question and turns start into end", async () => {
+test("returns to leaderboard after expiry and confirms aborting a running question", async () => {
   localStorage.setItem(
     "pubquiz-question-bank",
     JSON.stringify({
@@ -225,13 +225,25 @@ test("advances an expired question and turns start into end", async () => {
     </QuestionProvider>,
   );
   fireEvent.click(
-    await screen.findByText("Nächste Frage", { selector: "button" }),
+    await screen.findByRole("button", { name: "Zurück zum Leaderboard" }),
   );
-  expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
+  fireEvent.click(screen.getByRole("button", { name: "Nächste Frage" }));
+  expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
-  fireEvent.click(screen.getByText("Frage beenden", { selector: "button" }));
+  fireEvent.click(screen.getByText("Frage abbrechen", { selector: "button" }));
+  let dialog = await screen.findByRole("alertdialog");
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Weiterlaufen lassen" }),
+  );
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
+  fireEvent.click(screen.getByText("Frage abbrechen", { selector: "button" }));
+  dialog = await screen.findByRole("alertdialog");
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Frage abbrechen" }),
+  );
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
   expect(screen.getByRole("button", { name: "Frage starten" })).toBeTruthy();
 });

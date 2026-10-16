@@ -1,4 +1,14 @@
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "./ui/alert-dialog";
+import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -89,6 +99,7 @@ export function QuestionComposer() {
   const [formDraft, setFormDraft] = useState<PreparedQuestion[]>([]);
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
+  const [abortOpen, setAbortOpen] = useState(false);
   const [selected, setSelected] = useState(0);
   const [preparedReveals, setPreparedReveals] = useState<
     Record<number, number[]>
@@ -121,21 +132,16 @@ export function QuestionComposer() {
   }, []);
   const chosen = questions[selected];
   const remaining = useRemainingSeconds(question);
-  const activeIndex = questions.findIndex(
-    (item) => item.number === question?.number,
-  );
-  const hasNextQuestion =
-    activeIndex >= 0 && activeIndex < questions.length - 1;
-  const mainAction = question
-    ? remaining === 0 && hasNextQuestion
-      ? "Nächste Frage"
-      : "Frage beenden"
-    : "Frage starten";
   const selectedIsActive =
     !!chosen &&
     question?.number === chosen.number &&
     question.text === chosen.text &&
     JSON.stringify(question.options ?? []) === JSON.stringify(chosen.options);
+  const mainAction = !selectedIsActive
+    ? "Frage starten"
+    : remaining === 0
+      ? "Zurück zum Leaderboard"
+      : "Frage abbrechen";
   const visibleAnswers = selectedIsActive
     ? (question?.revealedOptions ?? [])
     : chosen
@@ -252,9 +258,10 @@ export function QuestionComposer() {
                 )}
               </PreviewControl>
               <PreviewControl
-                label="Frage beenden"
+                label="Frage abbrechen"
+                destructive
                 disabled={!question}
-                onClick={dismiss}
+                onClick={() => setAbortOpen(true)}
               >
                 <Square />
               </PreviewControl>
@@ -357,37 +364,6 @@ export function QuestionComposer() {
           </EmptyContent>
         </Empty>
       )}
-      <div className="question-control-bar">
-        <div className="question-start-controls">
-          <Button
-            disabled={!ready || (!question && !chosen)}
-            onClick={() => {
-              if (question) {
-                if (remaining === 0 && hasNextQuestion)
-                  setSelected(activeIndex + 1);
-                dismiss();
-                return;
-              }
-              if (chosen)
-                publish(chosen.text, Number(durations[chosen.number] ?? 60), {
-                  number: chosen.number,
-                  options: chosen.options,
-                  ...(!!chosen.correctOptions?.length
-                    ? { correctOptions: chosen.correctOptions }
-                    : {}),
-                  revealedOptions: visibleAnswers,
-                });
-            }}
-          >
-            {mainAction}
-            {mainAction === "Frage beenden" ? (
-              <Square data-icon="inline-end" />
-            ) : (
-              <ChevronRight data-icon="inline-end" />
-            )}
-          </Button>
-        </div>
-      </div>
       {!!chosen?.options.length && (
         <div className="answer-reveal-controls answer-reveal-list">
           <span>
@@ -479,11 +455,72 @@ export function QuestionComposer() {
           </Button>
         </div>
       )}
+      <div className="question-control-bar">
+        <div className="question-start-controls">
+          <Button
+            variant={
+              mainAction === "Frage abbrechen" ? "destructive" : "default"
+            }
+            disabled={!ready || !chosen}
+            onClick={() => {
+              if (mainAction === "Frage abbrechen") {
+                setAbortOpen(true);
+                return;
+              }
+              if (mainAction === "Zurück zum Leaderboard") {
+                dismiss();
+                return;
+              }
+              if (chosen)
+                publish(chosen.text, Number(durations[chosen.number] ?? 60), {
+                  number: chosen.number,
+                  options: chosen.options,
+                  ...(!!chosen.correctOptions?.length
+                    ? { correctOptions: chosen.correctOptions }
+                    : {}),
+                  revealedOptions: visibleAnswers,
+                });
+            }}
+          >
+            {mainAction}
+            {mainAction === "Frage abbrechen" ? (
+              <Square data-icon="inline-end" />
+            ) : mainAction === "Frage starten" ? (
+              <Play data-icon="inline-end" />
+            ) : (
+              <Monitor data-icon="inline-end" />
+            )}
+          </Button>
+        </div>
+      </div>
       {(error || bankError) && (
         <Alert variant="destructive">
           <AlertDescription>{error || bankError}</AlertDescription>
         </Alert>
       )}
+      <AlertDialog open={abortOpen} onOpenChange={setAbortOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Frage abbrechen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Die laufende Frage und der Countdown werden beendet. Auf dem
+              Scoreboard erscheint wieder der Punktestand.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Weiterlaufen lassen</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                dismiss();
+                setAbortOpen(false);
+              }}
+            >
+              Frage abbrechen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
@@ -630,12 +667,14 @@ export function QuestionComposer() {
 }
 
 function PreviewControl({
+  destructive = false,
   label,
   disabled,
   onClick,
   children,
 }: {
   label: string;
+  destructive?: boolean;
   disabled: boolean;
   onClick: () => void;
   children: ReactNode;
@@ -652,7 +691,7 @@ function PreviewControl({
         }
       >
         <Button
-          variant="ghost"
+          variant={destructive ? "destructive" : "ghost"}
           size="icon"
           aria-label={label}
           disabled={disabled}
