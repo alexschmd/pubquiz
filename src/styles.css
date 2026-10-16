@@ -1064,3 +1064,42 @@ h1 {
   font: inherit;
   font-size: 14px;
 }
+.question-empty {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 32px 16px;
+}
+.question-screen-switch {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.answer-reveal-list > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.answer-reveal-list [data-slot="button"][aria-pressed] {
+  height: auto;
+  min-height: 36px;
+  white-space: normal;
+  justify-content: flex-start;
+  text-align: left;
+}
+.answer-reveal-list [data-slot="button"][aria-pressed] > span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.answer-reveal-list [aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+.question-compact-selection select {
+  text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .answer-reveal-list > div {
+    grid-template-columns: 1fr;
+  }
+}

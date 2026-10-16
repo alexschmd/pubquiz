@@ -1,3 +1,12 @@
+import { Eye, EyeOff, Plus, ListChecks } from "lucide-react";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyContent,
+} from "./ui/empty";
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
@@ -91,9 +100,11 @@ export function QuestionComposer() {
         <h2 id="question-title">
           Fragen <span>{questions.length}</span>
         </h2>
-        <Button disabled={!bankReady} onClick={edit}>
-          {questions.length ? "Fragen bearbeiten" : "Fragen hinzufügen"}
-        </Button>
+        {!!questions.length && (
+          <Button disabled={!bankReady} onClick={edit}>
+            Fragen bearbeiten
+          </Button>
+        )}
       </div>
       {!!questions.length ? (
         <div className="question-compact-selection">
@@ -106,7 +117,7 @@ export function QuestionComposer() {
             >
               {questions.map((item, index) => (
                 <option key={item.number} value={index}>
-                  Frage {item.number}
+                  Frage {item.number}: {item.text}
                 </option>
               ))}
             </select>
@@ -136,9 +147,23 @@ export function QuestionComposer() {
           </Field>
         </div>
       ) : (
-        <p className="question-list-empty">
-          Noch keine Fragen. Füge deine Fragen über den Dialog hinzu.
-        </p>
+        <Empty className="question-empty">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ListChecks />
+            </EmptyMedia>
+            <EmptyTitle>Noch keine Fragen</EmptyTitle>
+            <EmptyDescription>
+              Bereite die Fragen für deinen Quizabend vor.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button disabled={!bankReady} onClick={edit}>
+              <Plus data-icon="inline-start" />
+              Fragen hinzufügen
+            </Button>
+          </EmptyContent>
+        </Empty>
       )}
       <div className="question-control-bar">
         <div className="question-start-controls">
@@ -160,33 +185,9 @@ export function QuestionComposer() {
               : "Keine Frage ausgewählt"}
           </span>
         </div>
-        <div className="question-view-controls">
-          <Button
-            variant={
-              question?.visible !== false && question ? "secondary" : "outline"
-            }
-            disabled={!question}
-            aria-pressed={!!question && question.visible !== false}
-            onClick={() => setQuestionVisible(true)}
-          >
-            Frage anzeigen
-          </Button>
-          <Button
-            variant={
-              !question || question.visible === false ? "secondary" : "outline"
-            }
-            aria-pressed={!question || question.visible === false}
-            onClick={() => setQuestionVisible(false)}
-          >
-            Scoreboard anzeigen
-          </Button>
-          <Button variant="ghost" disabled={!question} onClick={dismiss}>
-            Frage beenden
-          </Button>
-        </div>
       </div>
       {!!question?.options?.length && (
-        <div className="answer-reveal-controls">
+        <div className="answer-reveal-controls answer-reveal-list">
           <span>Antworten freigeben · Frage {question.number ?? 1}</span>
           <div>
             {question.options.map((option, index) => {
@@ -208,8 +209,14 @@ export function QuestionComposer() {
                     )
                   }
                 >
-                  {String.fromCharCode(65 + index)} ·{" "}
-                  {shown ? "Sichtbar" : "Anzeigen"}
+                  {shown ? (
+                    <Eye data-icon="inline-start" />
+                  ) : (
+                    <EyeOff data-icon="inline-start" />
+                  )}
+                  <span>
+                    {String.fromCharCode(65 + index)} · {option}
+                  </span>
                 </Button>
               );
             })}
@@ -227,6 +234,20 @@ export function QuestionComposer() {
           </div>
         </div>
       )}
+      <div className="question-screen-switch">
+        <Button
+          variant="outline"
+          disabled={!question}
+          onClick={() => setQuestionVisible(question?.visible === false)}
+        >
+          {!question || question.visible === false
+            ? "Zur Frage wechseln"
+            : "Zum Scoreboard wechseln"}
+        </Button>
+        <Button variant="ghost" disabled={!question} onClick={dismiss}>
+          Frage beenden
+        </Button>
+      </div>
       <p className="question-live-status" role="status">
         {question
           ? `Frage ${question.number ?? 1} · ${remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`

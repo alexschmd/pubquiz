@@ -18,7 +18,9 @@ test("saves questions in a dialog, selects and times them independently, keeps v
       <QuestionComposer />
     </QuestionProvider>,
   );
-  expect(screen.getByRole("button", { name: "Frage anzeigen" })).toBeTruthy();
+  expect(
+    screen.getByRole("button", { name: "Zur Frage wechseln" }),
+  ).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Fragen hinzufügen" }));
   fireEvent.change(await screen.findByLabelText("Fragen"), {
     target: { value: "4. Erste Frage?; (A) (B)\n5. Zweite Frage?" },
@@ -42,12 +44,14 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(published.number).toBe(5);
-  fireEvent.click(screen.getByRole("button", { name: "Scoreboard anzeigen" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Zum Scoreboard wechseln" }),
+  );
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual({
     ...published,
     visible: false,
   });
-  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Zur Frage wechseln" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual(published);
   cleanup();
   render(
@@ -58,7 +62,9 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
-  expect(screen.getByRole("option", { name: "Frage 5" })).toBeTruthy();
+  expect(
+    screen.getByRole("option", { name: "Frage 5: Zweite Frage?" }),
+  ).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const initial = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(initial.revealedOptions).toEqual([]);
