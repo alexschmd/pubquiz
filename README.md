@@ -42,3 +42,5 @@ Die Tests prüfen Datenübernahme, Speicherung, Tab-Synchronisierung, beschädig
 ## Fragen und Countdown
 
 Unter `/manage` eine Frage und eine Dauer von 1 bis 3600 Sekunden eingeben und „Auf Scoreboard anzeigen“ wählen. Das Scoreboard zeigt dann die Frage mit Countdown statt der Teamkacheln. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ stehen. „Frage beenden“ bringt die Punkteanzeige zurück. Der gespeicherte Endzeitpunkt übersteht Neuladen; die Synchronisierung gilt für Tabs desselben Browsers und derselben Origin.
+
+Mehrere Fragen lassen sich in der großen Textarea vorbereiten: eine Frage pro Zeile, Leerzeilen werden ignoriert. Mit „Erste Frage starten“ bzw. „Nächste Frage starten“ wird die Liste manuell durchlaufen; die Dauer gilt pro Frage. Die Vorschau zeigt die nächste Frage. Änderungen am Text setzen die Reihenfolge zurück. Die vorbereitete Liste bleibt während des geöffneten Verwaltungsbildschirms erhalten; die aktive Frage wird weiterhin dauerhaft gespeichert.

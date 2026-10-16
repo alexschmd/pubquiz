@@ -720,3 +720,28 @@ h1 {
   min-width: 0;
   transform-origin: center;
 }
+.question-list-input {
+  min-height: 180px;
+  max-height: 420px;
+  resize: vertical;
+  field-sizing: fixed;
+  line-height: 1.65;
+}
+.question-queue-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.question-queue-status p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .question-queue-status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
