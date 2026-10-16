@@ -10,9 +10,7 @@ function Scoreboard() {
   const { teams, ready, error } = useTeams();
   if (!ready)
     return (
-      <main className="empty" aria-busy="true">
-        Scoreboard wird geladen …
-      </main>
+      <main className="empty" aria-label="Punktestand" aria-busy="true" />
     );
   return (
     <LazyMotion features={domMax} strict>
