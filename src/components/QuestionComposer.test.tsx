@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import {
   cleanup,
   fireEvent,
@@ -78,4 +78,31 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   ).toEqual([0, 1]);
   fireEvent.click(screen.getByRole("button", { name: "Alle verbergen" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual(initial);
+});
+
+test("copies an import prompt from the questions dialog", async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: { writeText },
+  });
+  try {
+    render(
+      <QuestionProvider>
+        <QuestionComposer />
+      </QuestionProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Fragen hinzufügen" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Prompt kopieren" }),
+    );
+    await screen.findByRole("button", { name: "Prompt kopiert" });
+    expect(writeText).toHaveBeenCalledOnce();
+    expect(writeText.mock.calls[0][0]).toContain("keinen Markdown-Codeblock");
+    expect(writeText.mock.calls[0][0]).toContain("(Antwort A) (Antwort B)");
+  } finally {
+    if (original) Object.defineProperty(navigator, "clipboard", original);
+    else Reflect.deleteProperty(navigator, "clipboard");
+  }
 });

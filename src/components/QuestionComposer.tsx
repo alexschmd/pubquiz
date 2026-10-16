@@ -1,4 +1,5 @@
-import { Eye, EyeOff, Plus, ListChecks } from "lucide-react";
+import { QUESTION_IMPORT_PROMPT } from "../lib/question-import-prompt";
+import { Eye, EyeOff, Plus, ListChecks, Copy, Check } from "lucide-react";
 import {
   Empty,
   EmptyHeader,
@@ -51,6 +52,9 @@ export function QuestionComposer() {
   const [bankReady, setBankReady] = useState(false);
   const [bankError, setBankError] = useState("");
   const [draftError, setDraftError] = useState("");
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
+    "idle",
+  );
   useEffect(() => {
     try {
       const raw = localStorage.getItem(BANK_KEY);
@@ -90,6 +94,7 @@ export function QuestionComposer() {
     }
   }
   function edit() {
+    setCopyState("idle");
     setDraft(text);
     setDraftError("");
     setOpen(true);
@@ -266,6 +271,41 @@ export function QuestionComposer() {
               Eine Frage pro Zeile. Nummern und Antworten sind optional.
             </DialogDescription>
           </DialogHeader>
+          <div className="question-prompt-copy">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(QUESTION_IMPORT_PROMPT);
+                  setCopyState("copied");
+                } catch {
+                  setCopyState("failed");
+                }
+              }}
+            >
+              {copyState === "copied" ? (
+                <Check data-icon="inline-start" />
+              ) : (
+                <Copy data-icon="inline-start" />
+              )}
+              {copyState === "copied" ? "Prompt kopiert" : "Prompt kopieren"}
+            </Button>
+            <p role="status">
+              {copyState === "failed"
+                ? "Kopieren nicht möglich. Markiere und kopiere den Prompt unten manuell."
+                : "Diesen Prompt zusammen mit deinem Fragendokument einer KI geben. Das Ergebnis hier einfügen."}
+            </p>
+            {copyState === "failed" && (
+              <Textarea
+                readOnly
+                aria-label="Prompt zum manuellen Kopieren"
+                value={QUESTION_IMPORT_PROMPT}
+                className="question-prompt-fallback"
+                onFocus={(event) => event.target.select()}
+              />
+            )}
+          </div>
           <form
             id="question-bank-form"
             onSubmit={(event) => {
