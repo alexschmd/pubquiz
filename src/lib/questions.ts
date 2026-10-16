@@ -2,7 +2,7 @@ export interface PreparedQuestion {
   number: number;
   text: string;
   options: string[];
-  correctOption?: number;
+  correctOptions?: number[];
 }
 export function parseQuestionList(source: string): PreparedQuestion[] {
   const used = new Set<number>();
@@ -25,13 +25,8 @@ export function parseQuestionList(source: string): PreparedQuestion[] {
       const marked = options
         .map((option, index) => (option.endsWith("*") ? index : -1))
         .filter((index) => index >= 0);
-      if (marked.length > 1)
-        throw new Error(
-          `Frage ${number}: Nur eine Antwort als richtig markieren.`,
-        );
-      const correctOption = marked[0];
-      if (correctOption !== undefined)
-        options[correctOption] = options[correctOption].slice(0, -1).trim();
+      for (const index of marked)
+        options[index] = options[index].slice(0, -1).trim();
       if (!Number.isSafeInteger(number) || number < 1 || used.has(number))
         throw new Error(
           `Frage ${index + 1}: Bitte eindeutige positive Nummern verwenden.`,
@@ -54,7 +49,7 @@ export function parseQuestionList(source: string): PreparedQuestion[] {
         number,
         text,
         options,
-        ...(correctOption !== undefined ? { correctOption } : {}),
+        ...(marked.length ? { correctOptions: marked } : {}),
       };
     });
 }

@@ -15,7 +15,7 @@ export interface QuizQuestion {
   options?: string[];
   visible?: boolean;
   revealedOptions?: number[];
-  correctOption?: number;
+  correctOptions?: number[];
   solutionRevealed?: boolean;
   durationMs?: number;
   pausedRemainingMs?: number;
@@ -76,6 +76,20 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
           : 0))
   )
     throw new Error("Ungültige richtige Antwort");
+  if (
+    "correctOptions" in data &&
+    (!Array.isArray(data.correctOptions) ||
+      data.correctOptions.some(
+        (index) =>
+          !Number.isInteger(index) ||
+          index < 0 ||
+          index >=
+            ("options" in data && Array.isArray(data.options)
+              ? data.options.length
+              : 0),
+      ))
+  )
+    throw new Error("Ungültige richtige Antworten");
   if ("solutionRevealed" in data && typeof data.solutionRevealed !== "boolean")
     throw new Error("Ungültige Lösungsfreigabe");
   for (const key of ["durationMs", "pausedRemainingMs"] as const) {
@@ -93,9 +107,11 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
     ...("pausedRemainingMs" in data
       ? { pausedRemainingMs: data.pausedRemainingMs as number }
       : {}),
-    ...("correctOption" in data
-      ? { correctOption: data.correctOption as number }
-      : {}),
+    ...("correctOptions" in data
+      ? { correctOptions: data.correctOptions as number[] }
+      : "correctOption" in data
+        ? { correctOptions: [data.correctOption as number] }
+        : {}),
     ...("solutionRevealed" in data
       ? { solutionRevealed: data.solutionRevealed as boolean }
       : {}),
@@ -116,13 +132,16 @@ interface QuestionState {
   publish: (
     text: string,
     seconds: number,
-    details?: Pick<PreparedQuestion, "number" | "options" | "correctOption"> & {
+    details?: Pick<
+      PreparedQuestion,
+      "number" | "options" | "correctOptions"
+    > & {
       revealedOptions?: number[];
     },
   ) => boolean;
   setQuestionVisible: (visible: boolean) => void;
   revealOptions: (indices: number[]) => void;
-  setCorrectOption: (index: number | undefined) => void;
+  setCorrectOptions: (indices: number[]) => void;
   revealSolution: (visible: boolean) => void;
   toggleTimer: () => void;
   restartTimer: () => void;
@@ -171,7 +190,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       seconds: number,
       details?: Pick<
         PreparedQuestion,
-        "number" | "options" | "correctOption"
+        "number" | "options" | "correctOptions"
       > & {
         revealedOptions?: number[];
       },
@@ -222,19 +241,22 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
             ),
           });
       },
-      setCorrectOption: (index: number | undefined) => {
+      setCorrectOptions: (indices: number[]) => {
         if (!ready || !question) return;
-        if (
-          index !== undefined &&
-          (!Number.isInteger(index) ||
-            index < 0 ||
-            index >= (question.options?.length ?? 0))
-        )
-          return;
-        persist({ ...question, correctOption: index, solutionRevealed: false });
+        const correctOptions = [...new Set(indices)].filter(
+          (index) =>
+            Number.isInteger(index) &&
+            index >= 0 &&
+            index < (question.options?.length ?? 0),
+        );
+        persist({
+          ...question,
+          correctOptions: correctOptions.sort((a, b) => a - b),
+          solutionRevealed: false,
+        });
       },
       revealSolution: (visible: boolean) => {
-        if (!ready || !question || question.correctOption === undefined) return;
+        if (!ready || !question || !question.correctOptions?.length) return;
         persist({
           ...question,
           solutionRevealed: visible,

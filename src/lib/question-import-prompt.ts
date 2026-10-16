@@ -9,7 +9,7 @@ Formatregeln:
 - Zwischen den Antwortklammern nur ein Leerzeichen verwenden, keine weiteren Semikolons.
 - Falls keine Antwortmöglichkeiten vorhanden sind, nur „1. Fragetext“ ausgeben, ohne Semikolon. Keine Antworten erfinden und keine offene Frage in eine Auswahlfrage umwandeln.
 - Vorhandene Antwortmöglichkeiten vollständig und in ihrer ursprünglichen Reihenfolge übernehmen, aber Kennzeichnungen wie A), B), Aufzählungszeichen oder Hinweise auf die richtige Antwort entfernen.
-- Falls die richtige Antwort im Dokument eindeutig angegeben ist und zu den Antwortmöglichkeiten passt, diese innerhalb ihrer Klammer am Ende mit einem * markieren: (Merkur*). Höchstens eine richtige Antwort markieren. Nicht raten. Eine Musterlösung ist keine zusätzliche Antwortmöglichkeit. Lösungen und Erklärungen ansonsten nicht ausgeben.
+- Falls die richtige Antwort im Dokument eindeutig angegeben ist und zu den Antwortmöglichkeiten passt, alle zutreffenden Antworten innerhalb ihrer Klammern am Ende mit einem * markieren: (Merkur*). Mehrere richtige Antworten sind möglich. Nicht raten. Eine Musterlösung ist keine zusätzliche Antwortmöglichkeit. Lösungen und Erklärungen ansonsten nicht ausgeben.
 - Semikolons innerhalb des Fragetexts durch Kommas ersetzen. Runde Klammern innerhalb einer Antwort durch eckige Klammern ersetzen, damit die äußeren runden Klammern eindeutig bleiben.
 - Maximal 1000 Zeichen pro Fragetext, höchstens 8 Antwortmöglichkeiten pro Frage und maximal 300 Zeichen pro Antwort. Wenn nötig sinngemäß kürzen, ohne die Bedeutung zu verändern.
 - Nur Fragen verwenden, die tatsächlich im Dokument enthalten sind. Keine zusätzlichen Fragen ergänzen.

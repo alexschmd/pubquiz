@@ -18,7 +18,9 @@ test("extracts the correct-answer marker without displaying it", () => {
     number: 1,
     text: "Planet?",
     options: ["Merkur", "Venus"],
-    correctOption: 0,
+    correctOptions: [0],
   });
-  expect(() => parseQuestionList("1. Planet?; (Merkur*) (Venus*)")).toThrow();
+  expect(
+    parseQuestionList("1. Planet?; (Merkur*) (Venus*)")[0].correctOptions,
+  ).toEqual([0, 1]);
 });

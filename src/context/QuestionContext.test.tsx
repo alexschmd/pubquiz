@@ -143,3 +143,18 @@ test("stops, restores, resumes and restarts the timer", () => {
     JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
   ).toBeUndefined();
 });
+
+test("restores multiple correct answers and migrates the previous single-answer format", () => {
+  const base = { text: "Test", endsAt: 1000, options: ["A", "B", "C"] };
+  expect(
+    parseQuestion(JSON.stringify({ ...base, correctOptions: [0, 2] }))
+      ?.correctOptions,
+  ).toEqual([0, 2]);
+  expect(
+    parseQuestion(JSON.stringify({ ...base, correctOption: 1 }))
+      ?.correctOptions,
+  ).toEqual([1]);
+  expect(() =>
+    parseQuestion(JSON.stringify({ ...base, correctOptions: [3] })),
+  ).toThrow();
+});

@@ -1299,3 +1299,25 @@ h1 {
     font-size: 11px;
   }
 }
+.answer-reveal-list .answer-bulk-actions {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.answer-bulk-actions > [data-slot="button"] {
+  flex: 1;
+}
+.solution-control {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.solution-control p {
+  flex: none;
+  min-width: 0;
+  line-height: 1.5;
+}
+.solution-control > [data-slot="button"] {
+  width: 100%;
+  justify-content: center;
+}

@@ -39,7 +39,7 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
                 layout
                 data-solution={
                   question.solutionRevealed
-                    ? question.correctOption === option.index
+                    ? question.correctOptions?.includes(option.index)
                       ? "correct"
                       : "incorrect"
                     : undefined
@@ -53,7 +53,7 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
                 <span>{String.fromCharCode(65 + option.index)}</span>
                 {option.text}
                 {question.solutionRevealed &&
-                  question.correctOption === option.index && (
+                  question.correctOptions?.includes(option.index) && (
                     <span
                       className="solution-check"
                       aria-label="Richtige Antwort"

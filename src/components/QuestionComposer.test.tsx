@@ -91,14 +91,19 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     screen.getByRole("button", { name: "Antwort B als richtig markieren" }),
   );
   const marked = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
-  expect(marked.correctOption).toBe(1);
+  expect(marked.correctOptions).toEqual([1]);
   expect(marked.solutionRevealed).toBe(false);
   expect(
     JSON.parse(localStorage.getItem("pubquiz-question-bank")!).text,
   ).toContain("(B*)");
   fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Antwort A als richtig markieren" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
   const solution = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(solution.solutionRevealed).toBe(true);
+  expect(solution.correctOptions).toEqual([0, 1]);
   expect(solution.revealedOptions).toEqual([0, 1]);
   expect(solution.endsAt).toBe(initial.endsAt);
   fireEvent.click(screen.getByRole("button", { name: "Lösung verbergen" }));

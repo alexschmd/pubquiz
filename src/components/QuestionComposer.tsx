@@ -67,7 +67,7 @@ export function QuestionComposer() {
     revealOptions,
     toggleTimer,
     restartTimer,
-    setCorrectOption,
+    setCorrectOptions,
     revealSolution,
   } = useQuestion();
   const [text, setText] = useState("");
@@ -124,16 +124,19 @@ export function QuestionComposer() {
   }
   function markCorrect(index: number) {
     if (!chosen) return;
-    const correct = chosen.correctOption === index ? undefined : index;
+    const current = chosen.correctOptions ?? [];
+    const correct = current.includes(index)
+      ? current.filter((item) => item !== index)
+      : [...current, index];
     const nextText = questions
       .map((item) => {
         const answer =
-          item.number === chosen.number ? correct : item.correctOption;
-        return `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, i) => `(${option}${i === answer ? "*" : ""})`).join(" ")}` : ""}`;
+          item.number === chosen.number ? correct : (item.correctOptions ?? []);
+        return `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, i) => `(${option}${answer.includes(i) ? "*" : ""})`).join(" ")}` : ""}`;
       })
       .join("\n");
     if (saveBank(nextText, durations) && selectedIsActive)
-      setCorrectOption(correct);
+      setCorrectOptions(correct);
   }
   function saveBank(nextText: string, nextDurations: Record<number, string>) {
     try {
@@ -248,8 +251,8 @@ export function QuestionComposer() {
                 publish(chosen.text, Number(durations[chosen.number] ?? 60), {
                   number: chosen.number,
                   options: chosen.options,
-                  ...(chosen.correctOption !== undefined
-                    ? { correctOption: chosen.correctOption }
+                  ...(!!chosen.correctOptions?.length
+                    ? { correctOptions: chosen.correctOptions }
                     : {}),
                   revealedOptions: visibleAnswers,
                 });
@@ -297,11 +300,13 @@ export function QuestionComposer() {
                   </ButtonGroupText>
                   <Button
                     variant={
-                      chosen.correctOption === index ? "secondary" : "outline"
+                      chosen.correctOptions?.includes(index)
+                        ? "secondary"
+                        : "outline"
                     }
                     size="icon"
-                    aria-pressed={chosen.correctOption === index}
-                    aria-label={`Antwort ${label} ${chosen.correctOption === index ? "nicht mehr als richtig markieren" : "als richtig markieren"}`}
+                    aria-pressed={chosen.correctOptions?.includes(index)}
+                    aria-label={`Antwort ${label} ${chosen.correctOptions?.includes(index) ? "nicht mehr als richtig markieren" : "als richtig markieren"}`}
                     title="Richtige Antwort markieren"
                     onClick={() => markCorrect(index)}
                   >
@@ -310,31 +315,34 @@ export function QuestionComposer() {
                 </ButtonGroup>
               );
             })}
-            <Button
-              variant="outline"
-              onClick={() =>
-                setAnswers(chosen.options.map((_, index) => index))
-              }
+            <ButtonGroup
+              aria-label="Alle Antworten"
+              className="answer-bulk-actions"
             >
-              Alle anzeigen
-            </Button>
-            <Button variant="ghost" onClick={() => setAnswers([])}>
-              Alle verbergen
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setAnswers(chosen.options.map((_, index) => index))
+                }
+              >
+                Alle anzeigen
+              </Button>
+              <Button variant="outline" onClick={() => setAnswers([])}>
+                Alle verbergen
+              </Button>
+            </ButtonGroup>
           </div>
         </div>
       )}
       {!!chosen?.options.length && (
         <div className="solution-control">
           <p>
-            Mit dem Haken die richtige Antwort markieren. Sie bleibt bis zum
-            Aufdecken verborgen.
+            Markiere mit den Haken alle richtigen Antworten. Beim Aufdecken
+            werden sie grün hervorgehoben und die übrigen abgedimmt.
           </p>
           <Button
             variant="outline"
-            disabled={
-              !selectedIsActive || question?.correctOption === undefined
-            }
+            disabled={!selectedIsActive || !question?.correctOptions?.length}
             onClick={() => revealSolution(!question?.solutionRevealed)}
           >
             {question?.solutionRevealed && selectedIsActive
