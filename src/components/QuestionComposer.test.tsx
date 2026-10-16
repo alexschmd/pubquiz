@@ -31,10 +31,13 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.change(screen.getByLabelText("Zeit für Frage 4"), {
     target: { value: "30" },
   });
+  fireEvent.change(screen.getByLabelText("Frage auswählen"), {
+    target: { value: "1" },
+  });
   fireEvent.change(screen.getByLabelText("Zeit für Frage 5"), {
     target: { value: "90" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Frage 5" }));
+
   expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
@@ -55,7 +58,7 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
-  expect(screen.getByRole("button", { name: "Frage 5" })).toBeTruthy();
+  expect(screen.getByRole("option", { name: "Frage 5" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const initial = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(initial.revealedOptions).toEqual([]);

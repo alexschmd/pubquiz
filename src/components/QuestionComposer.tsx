@@ -96,42 +96,45 @@ export function QuestionComposer() {
         </Button>
       </div>
       {!!questions.length ? (
-        <ol className="prepared-question-list">
-          {questions.map((item, index) => (
-            <li key={item.number} data-selected={selected === index}>
-              <Button
-                variant="ghost"
-                className="question-pick"
-                aria-label={`Frage ${item.number}`}
-                aria-pressed={selected === index}
-                onClick={() => setSelected(index)}
-              >
-                <span>Frage {item.number}</span>
-              </Button>
-              <div className="question-row-duration">
-                <InputGroup>
-                  <InputGroupInput
-                    aria-label={`Zeit für Frage ${item.number}`}
-                    type="number"
-                    min={1}
-                    max={3600}
-                    step={1}
-                    value={durations[item.number] ?? "60"}
-                    onChange={(event) =>
-                      saveBank(text, {
-                        ...durations,
-                        [item.number]: event.target.value,
-                      })
-                    }
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <InputGroupText>Sek.</InputGroupText>
-                  </InputGroupAddon>
-                </InputGroup>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <div className="question-compact-selection">
+          <Field>
+            <FieldLabel htmlFor="question-number">Frage auswählen</FieldLabel>
+            <select
+              id="question-number"
+              value={selected}
+              onChange={(event) => setSelected(Number(event.target.value))}
+            >
+              {questions.map((item, index) => (
+                <option key={item.number} value={index}>
+                  Frage {item.number}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field className="question-compact-duration">
+            <FieldLabel htmlFor="selected-duration">Zeit</FieldLabel>
+            <InputGroup>
+              <InputGroupInput
+                id="selected-duration"
+                aria-label={`Zeit für Frage ${chosen.number}`}
+                type="number"
+                min={1}
+                max={3600}
+                step={1}
+                value={durations[chosen.number] ?? "60"}
+                onChange={(event) =>
+                  saveBank(text, {
+                    ...durations,
+                    [chosen.number]: event.target.value,
+                  })
+                }
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupText>Sek.</InputGroupText>
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+        </div>
       ) : (
         <p className="question-list-empty">
           Noch keine Fragen. Füge deine Fragen über den Dialog hinzu.
