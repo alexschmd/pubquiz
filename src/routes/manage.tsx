@@ -19,14 +19,6 @@ import {
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "../components/ui/field";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import {
   Empty,
@@ -60,26 +52,24 @@ function Manage() {
   }
   return (
     <main className="management">
-      <div className="management-topbar">
-        <Link to="/" className="quiz-wordmark">
-          pubquiz<span>/</span>
-        </Link>
-        <span>Spielleitung</span>
-      </div>
-      <header className="management-heading">
-        <div>
+      <header className="management-topbar">
+        <div className="management-breadcrumb">
+          <Link to="/" className="quiz-wordmark">
+            pubquiz<span>/</span>
+          </Link>
           <h1>Punktestand</h1>
-          <p>Teams verwalten und Punkte vergeben.</p>
         </div>
+      </header>
+      <div className="management-actions">
         <Button
-          variant="outline"
+          variant="ghost"
           nativeButton={false}
           render={<Link to="/" target="_blank" rel="noopener" />}
         >
-          <span>Scoreboard öffnen</span>
-          <ArrowUpRight data-icon="inline-end" />
+          <ArrowUpRight data-icon="inline-start" />
+          Scoreboard öffnen
         </Button>
-      </header>
+      </div>
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -117,66 +107,43 @@ function Manage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14 pl-6">Nr.</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead className="text-right">Punkte</TableHead>
-                <TableHead className="w-32 pr-6">
-                  <span className="sr-only">Punkte ändern</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...teams]
-                .sort((a, b) => a.id - b.id)
-                .map((team, index) => (
-                  <TableRow key={team.id}>
-                    <TableCell className="pl-6 text-muted-foreground tabular-nums">
-                      {String(index + 1).padStart(2, "0")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="team-identity">
-                        <span
-                          className="team-swatch"
-                          style={{ background: team.color_start }}
-                        />
-                        <span>{team.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <output
-                        className="team-points"
-                        aria-label={`${team.name}: Punkte`}
-                      >
-                        {team.score}
-                      </output>
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <div className="point-stepper">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label={`${team.name}: einen Punkt abziehen`}
-                          onClick={() => score(team, -1)}
-                        >
-                          <Minus />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label={`${team.name}: einen Punkt hinzufügen`}
-                          onClick={() => score(team, 1)}
-                        >
-                          <Plus />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+          <div className="management-tiles">
+            {[...teams]
+              .sort((a, b) => a.id - b.id)
+              .map((team) => (
+                <article className="management-tile" key={team.id}>
+                  <div className="team-identity">
+                    <span
+                      className="team-swatch"
+                      style={{ background: team.color_start }}
+                    />
+                    <h3>{team.name}</h3>
+                  </div>
+                  <div className="tile-score">
+                    <output aria-label={`${team.name}: Punkte`}>
+                      {team.score}
+                    </output>
+                    <span>Punkte</span>
+                  </div>
+                  <div className="tile-controls">
+                    <Button
+                      variant="outline"
+                      aria-label={`${team.name}: einen Punkt abziehen`}
+                      onClick={() => score(team, -1)}
+                    >
+                      <Minus />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      aria-label={`${team.name}: einen Punkt hinzufügen`}
+                      onClick={() => score(team, 1)}
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
+                </article>
+              ))}
+          </div>
         )}
       </section>
       <div className="management-footnote">

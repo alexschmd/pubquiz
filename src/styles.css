@@ -407,3 +407,98 @@ h1 {
     min-width: 120px;
   }
 }
+
+.management-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.management-breadcrumb h1 {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  margin: 0;
+  color: var(--foreground);
+}
+.management-actions {
+  display: flex;
+  justify-content: flex-start;
+  padding: 24px 0 8px;
+}
+.management-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+.management-tile {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  background: var(--background);
+}
+.management-tile h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.tile-score {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 28px 0 24px;
+}
+.tile-score output {
+  font-size: 48px;
+  font-weight: 550;
+  letter-spacing: -2px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.tile-score > span {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.tile-controls {
+  display: flex;
+  gap: 8px;
+}
+.tile-controls [data-slot="button"] {
+  flex: 1;
+}
+@media (max-width: 800px) {
+  .management-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .management-tiles {
+    gap: 10px;
+    padding: 12px;
+  }
+  .management-tile {
+    padding: 14px;
+  }
+  .management-tile .team-identity {
+    min-width: 0;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .management-tile .team-swatch {
+    margin-top: 5px;
+  }
+  .tile-score {
+    margin: 24px 0 20px;
+  }
+}
+.management-tile {
+  display: flex;
+  flex-direction: column;
+}
+.management-tile .team-identity {
+  min-height: 40px;
+}
+.tile-controls {
+  margin-top: auto;
+}
