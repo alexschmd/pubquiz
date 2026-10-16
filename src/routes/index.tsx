@@ -1,5 +1,5 @@
 import { TeamStanding } from "../components/TeamStanding";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useQuestion } from "../context/QuestionContext";
 import { QuestionDisplay } from "../components/QuestionDisplay";
 import { SlidingNumber } from "../components/SlidingNumber";
@@ -86,7 +86,14 @@ function Scoreboard() {
                             >
                               <TeamBackground color={team.color_start} />
                               <h1>{team.name}</h1>
-                              <p className="score">
+                              <p
+                                className="score"
+                                style={
+                                  {
+                                    "--score-digits": String(team.score).length,
+                                  } as CSSProperties
+                                }
+                              >
                                 <SlidingNumber value={team.score} />
                               </p>
                               <TeamStanding rank={ranks.get(team.id)!} />

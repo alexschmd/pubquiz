@@ -90,6 +90,7 @@ h1 {
   min-height: 0;
 }
 .score-tile {
+  container-type: inline-size;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -106,7 +107,7 @@ h1 {
   margin: 0;
 }
 .score {
-  font-size: clamp(4rem, 17vw, 17rem);
+  font-size: min(17vw, 17rem, calc(135cqw / var(--score-digits, 2)));
   line-height: 1.1;
   letter-spacing: -0.06em;
   font-weight: 750;
@@ -118,7 +119,7 @@ h1 {
     padding: 0.5rem;
   }
   .score {
-    font-size: clamp(3rem, 17vw, 8rem);
+    font-size: min(17vw, 8rem, calc(135cqw / var(--score-digits, 2)));
   }
 }
 
@@ -1367,10 +1368,10 @@ h1 {
 .question-session {
   display: grid;
   gap: 16px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
 }
 .question-session-heading {
   display: flex;
