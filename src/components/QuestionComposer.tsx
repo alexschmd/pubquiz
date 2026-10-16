@@ -366,10 +366,6 @@ export function QuestionComposer() {
       )}
       {!!chosen?.options.length && (
         <div className="answer-reveal-controls answer-reveal-list">
-          <span>
-            Antworten · Frage {chosen.number}
-            {selectedIsActive ? " · Live" : " · Vorbereitung"}
-          </span>
           <div>
             {chosen.options.map((option, index) => {
               const shown = visibleAnswers.includes(index);
@@ -482,14 +478,14 @@ export function QuestionComposer() {
                 });
             }}
           >
-            {mainAction}
             {mainAction === "Frage abbrechen" ? (
-              <Square data-icon="inline-end" />
+              <Square data-icon="inline-start" />
             ) : mainAction === "Frage starten" ? (
-              <Play data-icon="inline-end" />
+              <Play data-icon="inline-start" />
             ) : (
-              <Monitor data-icon="inline-end" />
+              <Monitor data-icon="inline-start" />
             )}
+            {mainAction}
           </Button>
         </div>
       </div>
