@@ -9,9 +9,7 @@ export const Route = createFileRoute("/")({ component: Scoreboard });
 function Scoreboard() {
   const { teams, ready, error } = useTeams();
   if (!ready)
-    return (
-      <main className="empty" aria-label="Punktestand" aria-busy="true" />
-    );
+    return <main className="empty" aria-label="Punktestand" aria-busy="true" />;
   return (
     <LazyMotion features={domMax} strict>
       <MotionConfig reducedMotion="user">
@@ -42,7 +40,13 @@ function Scoreboard() {
                       <m.article
                         layout
                         layoutId={`team-${team.id}`}
-                        transition={{ duration: 0.5 }}
+                        transition={{
+                          layout: {
+                            type: "spring",
+                            duration: 0.7,
+                            bounce: 0.25,
+                          },
+                        }}
                         className="score-tile"
                         key={team.id}
                       >

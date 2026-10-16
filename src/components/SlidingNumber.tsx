@@ -5,9 +5,9 @@ import { m, useReducedMotion, useSpring, useTransform } from "motion/react";
 function RollingDigit({ value, place }: { value: number; place: number }) {
   const target = Math.floor(value / place);
   const position = useSpring(target, {
-    stiffness: 180,
-    damping: 26,
-    mass: 0.7,
+    stiffness: 230,
+    damping: 16,
+    mass: 0.8,
   });
   useEffect(() => {
     position.set(target);
