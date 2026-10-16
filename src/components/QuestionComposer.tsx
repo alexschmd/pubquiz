@@ -33,6 +33,7 @@ import {
   EyeOff,
   Plus,
   ListChecks,
+  Pencil,
   Copy,
   Check,
   ChevronRight,
@@ -270,6 +271,7 @@ export function QuestionComposer() {
         </h2>
         {!!questions.length && (
           <Button disabled={!bankReady} onClick={edit}>
+            <Pencil data-icon="inline-start" />
             Fragen bearbeiten
           </Button>
         )}
@@ -277,9 +279,7 @@ export function QuestionComposer() {
       {!!questions.length ? (
         <div className="question-compact-selection">
           <Field>
-            <FieldLabel htmlFor="question-number">
-              Nächste Frage vorbereiten
-            </FieldLabel>
+            <FieldLabel htmlFor="question-number">Nächste Frage</FieldLabel>
             <div className="question-sequence">
               <Button
                 variant="outline"
