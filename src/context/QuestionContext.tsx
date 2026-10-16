@@ -15,6 +15,8 @@ export interface QuizQuestion {
   options?: string[];
   visible?: boolean;
   revealedOptions?: number[];
+  durationMs?: number;
+  pausedRemainingMs?: number;
 }
 export function parseQuestion(raw: string | null): QuizQuestion | null {
   if (!raw) return null;
@@ -62,7 +64,21 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
       ))
   )
     throw new Error("Ungültige Antwortfreigabe");
+  for (const key of ["durationMs", "pausedRemainingMs"] as const) {
+    if (
+      key in data &&
+      (typeof (data as Record<string, unknown>)[key] !== "number" ||
+        !Number.isFinite((data as Record<string, unknown>)[key]) ||
+        Number((data as Record<string, unknown>)[key]) < 0 ||
+        Number((data as Record<string, unknown>)[key]) > 3600000)
+    )
+      throw new Error("Ungültiger Timer");
+  }
   return {
+    ...("durationMs" in data ? { durationMs: data.durationMs as number } : {}),
+    ...("pausedRemainingMs" in data
+      ? { pausedRemainingMs: data.pausedRemainingMs as number }
+      : {}),
     text: data.text,
     ...("revealedOptions" in data
       ? { revealedOptions: data.revealedOptions as number[] }
@@ -80,10 +96,14 @@ interface QuestionState {
   publish: (
     text: string,
     seconds: number,
-    details?: Pick<PreparedQuestion, "number" | "options">,
+    details?: Pick<PreparedQuestion, "number" | "options"> & {
+      revealedOptions?: number[];
+    },
   ) => boolean;
   setQuestionVisible: (visible: boolean) => void;
   revealOptions: (indices: number[]) => void;
+  toggleTimer: () => void;
+  restartTimer: () => void;
   dismiss: () => void;
 }
 const Context = createContext<QuestionState | null>(null);
@@ -127,7 +147,9 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
     function publish(
       text: string,
       seconds: number,
-      details?: Pick<PreparedQuestion, "number" | "options">,
+      details?: Pick<PreparedQuestion, "number" | "options"> & {
+        revealedOptions?: number[];
+      },
     ) {
       if (!ready) return false;
       if (
@@ -145,7 +167,14 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       return persist({
         text: text.trim(),
         endsAt: Date.now() + seconds * 1000,
-        ...(details ? { ...details, visible: true, revealedOptions: [] } : {}),
+        durationMs: seconds * 1000,
+        ...(details
+          ? {
+              ...details,
+              visible: true,
+              revealedOptions: details.revealedOptions ?? [],
+            }
+          : {}),
       });
     }
     return {
@@ -168,6 +197,25 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
             ),
           });
       },
+      toggleTimer: () => {
+        if (!ready || !question) return;
+        if (question.pausedRemainingMs !== undefined) {
+          const { pausedRemainingMs, ...rest } = question;
+          persist({ ...rest, endsAt: Date.now() + pausedRemainingMs });
+        } else
+          persist({
+            ...question,
+            pausedRemainingMs: Math.max(0, question.endsAt - Date.now()),
+          });
+      },
+      restartTimer: () => {
+        if (!ready || !question) return;
+        const { pausedRemainingMs, ...rest } = question;
+        persist({
+          ...rest,
+          endsAt: Date.now() + (question.durationMs ?? 60000),
+        });
+      },
       dismiss: () => {
         if (ready) persist(null);
       },
@@ -187,14 +235,24 @@ export function useRemainingSeconds(question: QuizQuestion | null) {
     function tick() {
       const time = Date.now();
       setNow(time);
-      if (!question || time >= question.endsAt) return;
+      if (
+        !question ||
+        question.pausedRemainingMs !== undefined ||
+        time >= question.endsAt
+      )
+        return;
       const untilBoundary = (question.endsAt - time) % 1000;
       timer = setTimeout(tick, untilBoundary || 1000);
     }
     tick();
     return () => clearTimeout(timer);
   }, [question]);
-  return question ? Math.max(0, Math.ceil((question.endsAt - now) / 1000)) : 0;
+  return question
+    ? Math.max(
+        0,
+        Math.ceil((question.pausedRemainingMs ?? question.endsAt - now) / 1000),
+      )
+    : 0;
 }
 export function formatCountdown(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;

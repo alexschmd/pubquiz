@@ -1159,3 +1159,33 @@ h1 {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.answer-segment-group {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+.answer-segment-group > [data-slot="button"] {
+  flex-shrink: 0;
+  height: auto;
+  min-height: 36px;
+}
+.answer-segment-group > [data-slot="button-group-text"] {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+.answer-segment-group .answer-segment-text {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.question-timer-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}

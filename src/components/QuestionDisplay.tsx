@@ -8,7 +8,10 @@ import {
 export function QuestionDisplay({ question }: { question: QuizQuestion }) {
   const remaining = useRemainingSeconds(question);
   const reduceMotion = useReducedMotion();
-  const urgent = remaining > 0 && remaining <= 10;
+  const urgent =
+    remaining > 0 &&
+    remaining <= 10 &&
+    question.pausedRemainingMs === undefined;
   const pulseDelay = useMemo(
     () => `-${(((Date.now() - question.endsAt) % 1000) + 1000) % 1000}ms`,
     [question.endsAt, urgent],
@@ -67,7 +70,11 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
           {formatCountdown(remaining)}
         </div>
         <p className="question-time-label" role="status">
-          {remaining === 0 ? "Zeit abgelaufen" : "Verbleibende Zeit"}
+          {question.pausedRemainingMs !== undefined
+            ? "Zeit gestoppt"
+            : remaining === 0
+              ? "Zeit abgelaufen"
+              : "Verbleibende Zeit"}
         </p>
       </m.div>
     </main>

@@ -55,3 +55,7 @@ Das Scoreboard zeigt „Frage X“, den Fragetext, optionale Antworten und den C
 „Scoreboard anzeigen“ und „Frage anzeigen“ wechseln die Ansicht, ohne die Zeit zurückzusetzen. „Frage beenden“ entfernt die aktive Frage. Endzeitpunkt, aktive Frage und Ansicht werden gespeichert und zwischen Tabs derselben Origin synchronisiert. Die vorbereitete Fragenliste und ihre Zeiten bleiben ebenfalls gespeichert.
 
 Antwortmöglichkeiten sind nach dem Start verborgen. Unter der Fragensteuerung können A, B, C usw. einzeln sowie alle Antworten gemeinsam angezeigt oder wieder verborgen werden. Der Countdown bleibt ohne sichtbare Antworten unter der Frage und wandert mit dem ersten Reveal animiert nach oben rechts. Das Verbergen aller Antworten bringt ihn zurück. Antwortfreigaben bleiben beim Ansichtswechsel und Neuladen erhalten; eine neu gestartete Frage beginnt wieder mit verborgenen Antworten.
+
+Antwortfreigaben lassen sich bereits für die ausgewählte Frage vorbereiten. Beim Start werden sie übernommen. Die schmalen Augen-Schalter in den shadcn Button Groups steuern die Sichtbarkeit. Für die laufende Frage wirken Änderungen sofort.
+
+„Zeit stoppen“ hält den Countdown mit seiner genauen Restzeit an und wird zu „Zeit fortsetzen“. „Zeit neu starten“ setzt die laufende Frage auf ihre beim Start gewählte Dauer zurück. Pausen bleiben auch beim Neuladen und Wechseln der Ansicht erhalten.

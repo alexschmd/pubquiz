@@ -14,7 +14,8 @@ import {
   parseQuestion,
 } from "./QuestionContext";
 function Probe() {
-  const { question, publish, dismiss } = useQuestion();
+  const { question, publish, dismiss, toggleTimer, restartTimer } =
+    useQuestion();
   const remaining = useRemainingSeconds(question);
   return (
     <>
@@ -22,6 +23,8 @@ function Probe() {
       <output>{remaining}</output>
       <button onClick={() => publish("Welche Stadt?", 3)}>Start</button>
       <button onClick={dismiss}>Ende</button>
+      <button onClick={toggleTimer}>Pause</button>
+      <button onClick={restartTimer}>Neustart</button>
     </>
   );
 }
@@ -42,6 +45,7 @@ test("publishes an absolute deadline, expires at zero and dismisses", () => {
   expect(parseQuestion(localStorage.getItem(QUESTION_KEY))).toEqual({
     text: "Welche Stadt?",
     endsAt: 103000,
+    durationMs: 3000,
   });
   expect(screen.getByRole("status").textContent).toBe("3");
   act(() => vi.advanceTimersByTime(5000));
@@ -105,4 +109,37 @@ test("ticks on the countdown deadline's second boundaries", () => {
   expect(screen.getByRole("status").textContent).toBe("3");
   act(() => vi.advanceTimersByTime(1000));
   expect(screen.getByRole("status").textContent).toBe("2");
+});
+
+test("stops, restores, resumes and restarts the timer", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100000);
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  fireEvent.click(screen.getByText("Start"));
+  act(() => vi.advanceTimersByTime(1250));
+  fireEvent.click(screen.getByText("Pause"));
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
+  ).toBe(1750);
+  act(() => vi.advanceTimersByTime(10000));
+  expect(screen.getByRole("status").textContent).toBe("2");
+  cleanup();
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  expect(screen.getByRole("status").textContent).toBe("2");
+  fireEvent.click(screen.getByText("Pause"));
+  act(() => vi.advanceTimersByTime(1750));
+  expect(screen.getByRole("status").textContent).toBe("0");
+  fireEvent.click(screen.getByText("Neustart"));
+  expect(screen.getByRole("status").textContent).toBe("3");
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
+  ).toBeUndefined();
 });

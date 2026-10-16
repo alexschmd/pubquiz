@@ -1,3 +1,4 @@
+import { ButtonGroup, ButtonGroupText } from "./ui/button-group";
 import {
   Select,
   SelectTrigger,
@@ -15,6 +16,9 @@ import {
   Copy,
   Check,
   ChevronRight,
+  Pause,
+  Play,
+  RotateCcw,
 } from "lucide-react";
 import {
   Empty,
@@ -61,11 +65,16 @@ export function QuestionComposer() {
     dismiss,
     setQuestionVisible,
     revealOptions,
+    toggleTimer,
+    restartTimer,
   } = useQuestion();
   const [text, setText] = useState("");
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(0);
+  const [preparedReveals, setPreparedReveals] = useState<
+    Record<number, number[]>
+  >({});
   const [durations, setDurations] = useState<Record<number, string>>({});
   const [bankReady, setBankReady] = useState(false);
   const [bankError, setBankError] = useState("");
@@ -96,6 +105,21 @@ export function QuestionComposer() {
   const questions = parseQuestionList(text);
   const chosen = questions[selected];
   const remaining = useRemainingSeconds(question);
+  const selectedIsActive =
+    !!chosen &&
+    question?.number === chosen.number &&
+    question.text === chosen.text &&
+    JSON.stringify(question.options ?? []) === JSON.stringify(chosen.options);
+  const visibleAnswers = selectedIsActive
+    ? (question?.revealedOptions ?? [])
+    : chosen
+      ? (preparedReveals[chosen.number] ?? [])
+      : [];
+  function setAnswers(indices: number[]) {
+    if (!chosen) return;
+    setPreparedReveals((current) => ({ ...current, [chosen.number]: indices }));
+    if (selectedIsActive) revealOptions(indices);
+  }
   function saveBank(nextText: string, nextDurations: Record<number, string>) {
     try {
       localStorage.setItem(
@@ -209,6 +233,7 @@ export function QuestionComposer() {
                 publish(chosen.text, Number(durations[chosen.number] ?? 60), {
                   number: chosen.number,
                   options: chosen.options,
+                  revealedOptions: visibleAnswers,
                 });
             }}
           >
@@ -217,61 +242,78 @@ export function QuestionComposer() {
           </Button>
         </div>
       </div>
-      {!!question?.options?.length && (
+      {!!chosen?.options.length && (
         <div className="answer-reveal-controls answer-reveal-list">
-          <span>Antworten freigeben · Frage {question.number ?? 1}</span>
+          <span>
+            Antworten · Frage {chosen.number}
+            {selectedIsActive ? " · Live" : " · Beim Start sichtbar"}
+          </span>
           <div>
-            {question.options.map((option, index) => {
-              const shown = question.revealedOptions?.includes(index) ?? false;
+            {chosen.options.map((option, index) => {
+              const shown = visibleAnswers.includes(index);
+              const label = String.fromCharCode(65 + index);
               return (
-                <Button
-                  key={String.fromCharCode(65 + index)}
-                  variant={shown ? "secondary" : "outline"}
-                  aria-pressed={shown}
-                  aria-label={`Antwort ${String.fromCharCode(65 + index)} ${shown ? "verbergen" : "anzeigen"}`}
-
-                  onClick={() =>
-                    revealOptions(
-                      shown
-                        ? (question.revealedOptions ?? []).filter(
-                            (item) => item !== index,
-                          )
-                        : [...(question.revealedOptions ?? []), index],
-                    )
-                  }
+                <ButtonGroup
+                  key={label}
+                  aria-label={`Antwort ${label}`}
+                  className="answer-segment-group"
                 >
-                  {shown ? (
-                    <Eye data-icon="inline-start" />
-                  ) : (
-                    <EyeOff data-icon="inline-start" />
-                  )}
-                  <span className="answer-control-divider" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="answer-control-letter">
-                    {String.fromCharCode(65 + index)}
-                  </span>
-                  <span className="answer-control-divider" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="answer-control-text">{option}</span>
-                </Button>
+                  <Button
+                    variant={shown ? "secondary" : "outline"}
+                    size="icon"
+                    aria-pressed={shown}
+                    aria-label={`Antwort ${label} ${shown ? "verbergen" : "anzeigen"}`}
+                    onClick={() =>
+                      setAnswers(
+                        shown
+                          ? visibleAnswers.filter((item) => item !== index)
+                          : [...visibleAnswers, index],
+                      )
+                    }
+                  >
+                    {shown ? <Eye /> : <EyeOff />}
+                  </Button>
+                  <ButtonGroupText>{label}</ButtonGroupText>
+                  <ButtonGroupText className="answer-segment-text">
+                    {option}
+                  </ButtonGroupText>
+                </ButtonGroup>
               );
             })}
             <Button
               variant="outline"
               onClick={() =>
-                revealOptions(question.options!.map((_, index) => index))
+                setAnswers(chosen.options.map((_, index) => index))
               }
             >
               Alle anzeigen
             </Button>
-            <Button variant="ghost" onClick={() => revealOptions([])}>
+            <Button variant="ghost" onClick={() => setAnswers([])}>
               Alle verbergen
             </Button>
           </div>
         </div>
       )}
+      <div className="question-timer-controls">
+        <Button
+          variant="outline"
+          disabled={!question || remaining === 0}
+          onClick={toggleTimer}
+        >
+          {question?.pausedRemainingMs !== undefined ? (
+            <Play data-icon="inline-start" />
+          ) : (
+            <Pause data-icon="inline-start" />
+          )}
+          {question?.pausedRemainingMs !== undefined
+            ? "Zeit fortsetzen"
+            : "Zeit stoppen"}
+        </Button>
+        <Button variant="outline" disabled={!question} onClick={restartTimer}>
+          <RotateCcw data-icon="inline-start" />
+          Zeit neu starten
+        </Button>
+      </div>
       <div className="question-screen-switch">
         <Button
           variant="outline"
@@ -288,7 +330,7 @@ export function QuestionComposer() {
       </div>
       <p className="question-live-status" role="status">
         {question
-          ? `Frage ${question.number ?? 1} · ${remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`
+          ? `Frage ${question.number ?? 1} · ${question.pausedRemainingMs !== undefined ? `${formatCountdown(remaining)} · Gestoppt` : remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`
           : "Scoreboard wird angezeigt"}
       </p>
       {(error || bankError) && (
