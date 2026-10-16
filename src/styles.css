@@ -618,3 +618,13 @@ h1 {
   grid-column: 1 / -1;
   margin: 0;
 }
+
+.management-tile .team-identity {
+  align-self: start;
+  align-items: flex-start;
+}
+.management-tile h3 {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
