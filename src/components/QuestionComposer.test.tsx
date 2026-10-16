@@ -1,36 +1,43 @@
 import { afterEach, expect, test } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { QuestionComposer } from "./QuestionComposer";
 import { QuestionProvider, QUESTION_KEY } from "../context/QuestionContext";
 afterEach(() => {
   cleanup();
   localStorage.clear();
 });
-test("selects questions without publishing, remembers durations and switches views without restarting", () => {
+test("saves questions in a dialog, selects and times them independently, keeps view controls visible", async () => {
   render(
     <QuestionProvider>
       <QuestionComposer />
     </QuestionProvider>,
   );
-  fireEvent.change(screen.getByLabelText("Fragen"), {
-    target: { value: "4. Erste Frage?; (A) (B)\n\n5. Zweite Frage?" },
+  expect(screen.getByRole("button", { name: "Frage anzeigen" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Fragen hinzufügen" }));
+  fireEvent.change(await screen.findByLabelText("Fragen"), {
+    target: { value: "4. Erste Frage?; (A) (B)\n5. Zweite Frage?" },
   });
-  fireEvent.change(screen.getByLabelText("Dauer in Sekunden"), {
+  fireEvent.click(screen.getByRole("button", { name: "Fragen speichern" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBe(null));
+  expect(
+    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).text,
+  ).toContain("Erste Frage");
+  fireEvent.change(screen.getByLabelText("Zeit für Frage 4"), {
     target: { value: "30" },
   });
-  fireEvent.click(
-    screen.getByRole("button", { name: "Nächste Frage auswählen" }),
-  );
-  expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
-  expect(
-    (screen.getByLabelText("Dauer in Sekunden") as HTMLInputElement).value,
-  ).toBe("60");
-  fireEvent.change(screen.getByLabelText("Dauer in Sekunden"), {
+  fireEvent.change(screen.getByLabelText("Zeit für Frage 5"), {
     target: { value: "90" },
   });
+  fireEvent.click(screen.getByRole("button", { name: "5. Zweite Frage?" }));
+  expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
-  expect(published.text).toBe("Zweite Frage?");
   expect(published.number).toBe(5);
   fireEvent.click(screen.getByRole("button", { name: "Scoreboard anzeigen" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual({
@@ -39,15 +46,14 @@ test("selects questions without publishing, remembers durations and switches vie
   });
   fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual(published);
-  fireEvent.change(screen.getByLabelText("Frage auswählen"), {
-    target: { value: "0" },
-  });
+  cleanup();
+  render(
+    <QuestionProvider>
+      <QuestionComposer />
+    </QuestionProvider>,
+  );
   expect(
-    (screen.getByLabelText("Dauer in Sekunden") as HTMLInputElement).value,
+    (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
-  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
-  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).options).toEqual([
-    "A",
-    "B",
-  ]);
+  expect(screen.getByRole("button", { name: "5. Zweite Frage?" })).toBeTruthy();
 });

@@ -41,15 +41,15 @@ Die Tests prüfen Datenübernahme, Speicherung, Tab-Synchronisierung, beschädig
 
 ## Fragen und Countdown
 
-Unter `/manage` mehrere Fragen in der shadcn-Textarea vorbereiten, eine pro Zeile. Leerzeilen werden ignoriert. Fragen können explizit nummeriert werden; sonst werden sie automatisch durchnummeriert.
+Unter `/manage` öffnet „Fragen hinzufügen“ bzw. „Fragen bearbeiten“ einen Dialog mit shadcn-Textarea. Dort mehrere Fragen vorbereiten, eine pro Zeile, und speichern. Leerzeilen werden ignoriert. Fragen können explizit nummeriert werden; sonst werden sie automatisch durchnummeriert.
 
 ```text
 1. Welcher Planet ist der Sonne am nächsten?; (Merkur) (Venus) (Erde) (Mars)
 2. Wer schrieb Faust?
 ```
 
-Frage auswählen, Dauer von 1 bis 3600 Sekunden setzen und „Frage starten“ wählen. „Nächste Frage auswählen“ bereitet die nächste Frage vor, ohne sie zu starten. Jede Frage merkt sich ihre eingestellte Zeit während der geöffneten Verwaltung. Änderungen an der Liste setzen Auswahl und vorbereitete Zeiten zurück.
+In der Übersicht eine Frage anklicken, ihre Dauer von 1 bis 3600 Sekunden direkt daneben einstellen und „Frage starten“ wählen. Die Vorschau entfällt. Start- und Ansichtsknöpfe bleiben immer sichtbar. Fragenliste und Zeiten bleiben nach dem Neuladen gespeichert.
 
-Das Scoreboard zeigt „Frage X“, den Fragetext, optionale Antworten und den Countdown. Die letzten zehn Sekunden pulsieren rot; bei reduzierter Bewegung bleibt der Timer statisch rot. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ sichtbar. Antworten sind zunächst nur Anzeige, ohne Lösungsauswahl oder automatische Wertung. Sound ist für eine spätere Erweiterung vorgesehen.
+Das Scoreboard zeigt „Frage X“, den Fragetext, optionale Antworten und den Countdown. Die letzten zehn Sekunden pulsieren synchron zu den Sekundenwechseln rot; bei reduzierter Bewegung bleibt der Timer statisch rot. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ sichtbar. Antworten sind zunächst nur Anzeige, ohne Lösungsauswahl oder automatische Wertung. Sound ist für eine spätere Erweiterung vorgesehen.
 
-„Scoreboard anzeigen“ und „Frage anzeigen“ wechseln die Ansicht, ohne die Zeit zurückzusetzen. „Frage beenden“ entfernt die aktive Frage. Endzeitpunkt, aktive Frage und Ansicht werden gespeichert und zwischen Tabs derselben Origin synchronisiert. Die vorbereitete Fragenliste bleibt aktuell nur während der geöffneten Verwaltungsseite erhalten.
+„Scoreboard anzeigen“ und „Frage anzeigen“ wechseln die Ansicht, ohne die Zeit zurückzusetzen. „Frage beenden“ entfernt die aktive Frage. Endzeitpunkt, aktive Frage und Ansicht werden gespeichert und zwischen Tabs derselben Origin synchronisiert. Die vorbereitete Fragenliste und ihre Zeiten bleiben ebenfalls gespeichert.

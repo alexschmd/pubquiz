@@ -85,3 +85,24 @@ test("rejects malformed saved questions", () => {
   expect(() => parseQuestion('{"text":"x","endsAt":"invalid"}')).toThrow();
   expect(parseQuestion("null")).toBe(null);
 });
+
+test("ticks on the countdown deadline's second boundaries", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100150);
+  localStorage.setItem(
+    QUESTION_KEY,
+    JSON.stringify({ text: "Takt", endsAt: 103500 }),
+  );
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  expect(screen.getByRole("status").textContent).toBe("4");
+  act(() => vi.advanceTimersByTime(349));
+  expect(screen.getByRole("status").textContent).toBe("4");
+  act(() => vi.advanceTimersByTime(1));
+  expect(screen.getByRole("status").textContent).toBe("3");
+  act(() => vi.advanceTimersByTime(1000));
+  expect(screen.getByRole("status").textContent).toBe("2");
+});

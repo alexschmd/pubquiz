@@ -1,183 +1,244 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Field, FieldGroup, FieldLabel, FieldDescription } from "./ui/field";
+import { Field, FieldLabel, FieldDescription } from "./ui/field";
 import { Alert, AlertDescription } from "./ui/alert";
-import { parseQuestionList, type PreparedQuestion } from "../lib/questions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./ui/dialog";
+import { parseQuestionList } from "../lib/questions";
 import {
   useQuestion,
   useRemainingSeconds,
   formatCountdown,
 } from "../context/QuestionContext";
+const BANK_KEY = "pubquiz-question-bank";
 export function QuestionComposer() {
   const { question, ready, error, publish, dismiss, setQuestionVisible } =
     useQuestion();
   const [text, setText] = useState("");
+  const [draft, setDraft] = useState("");
+  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(0);
   const [durations, setDurations] = useState<Record<number, string>>({});
-  let questions: PreparedQuestion[] = [];
-  let listError = "";
-  try {
-    questions = parseQuestionList(text);
-  } catch (error) {
-    listError = (error as Error).message;
-  }
+  const [bankReady, setBankReady] = useState(false);
+  const [bankError, setBankError] = useState("");
+  const [draftError, setDraftError] = useState("");
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(BANK_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (
+          typeof saved.text !== "string" ||
+          !saved.durations ||
+          typeof saved.durations !== "object"
+        )
+          throw new Error();
+        parseQuestionList(saved.text);
+        setText(saved.text);
+        setDurations(saved.durations);
+      }
+    } catch {
+      setBankError("Die gespeicherte Fragenliste konnte nicht geladen werden.");
+    }
+    setBankReady(true);
+  }, []);
+  const questions = parseQuestionList(text);
   const chosen = questions[selected];
-  const duration = durations[selected] ?? "60";
   const remaining = useRemainingSeconds(question);
+  function saveBank(nextText: string, nextDurations: Record<number, string>) {
+    try {
+      localStorage.setItem(
+        BANK_KEY,
+        JSON.stringify({ text: nextText, durations: nextDurations }),
+      );
+      setText(nextText);
+      setDurations(nextDurations);
+      setBankError("");
+      return true;
+    } catch {
+      setBankError("Die Fragenliste konnte nicht gespeichert werden.");
+      return false;
+    }
+  }
+  function edit() {
+    setDraft(text);
+    setDraftError("");
+    setOpen(true);
+  }
   return (
     <section className="question-composer" aria-labelledby="question-title">
-      <h2 id="question-title">Fragen vorbereiten</h2>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (chosen && !listError)
-            publish(chosen.text, Number(duration), {
-              number: chosen.number,
-              options: chosen.options,
-            });
-        }}
-      >
-        <FieldGroup>
-          <Field data-invalid={!!listError}>
-            <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
-            <Textarea
-              id="quiz-question"
-              maxLength={50000}
-              rows={7}
-              className="question-list-input"
-              aria-describedby="question-list-help"
-              aria-invalid={!!listError}
-              placeholder={
-                "1. Welcher Planet ist der Sonne am nächsten?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
-              }
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value);
-                setSelected(0);
-                setDurations({});
-              }}
-            />
-            <FieldDescription id="question-list-help">
-              Eine Frage pro Zeile. Optional nummerieren: 1. Frage; (Antwort A)
-              (Antwort B). Ohne Nummer wird automatisch durchnummeriert.
-              Leerzeilen werden übersprungen.
-            </FieldDescription>
-          </Field>
-          {listError && (
-            <Alert variant="destructive">
-              <AlertDescription>{listError}</AlertDescription>
-            </Alert>
-          )}
-          {!!questions.length && (
-            <>
-              <div className="question-selection">
-                <Field>
-                  <FieldLabel htmlFor="selected-question">
-                    Frage auswählen
-                  </FieldLabel>
-                  <select
-                    id="selected-question"
-                    aria-label="Frage auswählen"
-                    value={selected}
-                    onChange={(event) =>
-                      setSelected(Number(event.target.value))
-                    }
-                  >
-                    {questions.map((item, index) => (
-                      <option key={item.number} value={index}>
-                        Frage {item.number}: {item.text}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={selected >= questions.length - 1}
-                  onClick={() => setSelected((index) => index + 1)}
-                >
-                  Nächste Frage auswählen
-                </Button>
+      <div className="question-list-heading">
+        <h2 id="question-title">
+          Fragen <span>{questions.length}</span>
+        </h2>
+        <Button variant="ghost" disabled={!bankReady} onClick={edit}>
+          {questions.length ? "Fragen bearbeiten" : "Fragen hinzufügen"}
+        </Button>
+      </div>
+      {!!questions.length ? (
+        <ol className="prepared-question-list">
+          {questions.map((item, index) => (
+            <li key={item.number} data-selected={selected === index}>
+              <Button
+                variant="ghost"
+                className="question-pick"
+                aria-label={`${item.number}. ${item.text}`}
+                aria-pressed={selected === index}
+                onClick={() => setSelected(index)}
+              >
+                <span className="question-row-number">{item.number}.</span>
+                <span>{item.text}</span>
+              </Button>
+              <div className="question-row-duration">
+                <Input
+                  aria-label={`Zeit für Frage ${item.number}`}
+                  type="number"
+                  min={1}
+                  max={3600}
+                  step={1}
+                  value={durations[item.number] ?? "60"}
+                  onChange={(event) =>
+                    saveBank(text, {
+                      ...durations,
+                      [item.number]: event.target.value,
+                    })
+                  }
+                />
+                <span>Sek.</span>
               </div>
-              <div className="question-preview">
-                <span>Vorbereitet · Frage {chosen.number}</span>
-                <p>{chosen.text}</p>
-                {!!chosen.options.length && (
-                  <ol>
-                    {chosen.options.map((option, index) => (
-                      <li key={String.fromCharCode(65 + index)}>
-                        {String.fromCharCode(65 + index)} · {option}
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-            </>
-          )}
-          <div className="question-send">
-            <Field className="w-32 shrink-0">
-              <FieldLabel htmlFor="question-duration">
-                Dauer in Sekunden
-              </FieldLabel>
-              <Input
-                id="question-duration"
-                type="number"
-                required
-                min={1}
-                max={3600}
-                step={1}
-                value={duration}
-                onChange={(event) =>
-                  setDurations((current) => ({
-                    ...current,
-                    [selected]: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Button type="submit" disabled={!ready || !chosen || !!listError}>
-              Frage starten
-            </Button>
-          </div>
-        </FieldGroup>
-      </form>
-      {question && (
-        <div className="active-question">
-          <div>
-            <span className="active-question-label">
-              Frage {question.number ?? 1} ·{" "}
-              {remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}
-            </span>
-            <p>{question.text}</p>
-          </div>
-          <div className="question-view-controls">
-            <Button
-              variant={question.visible !== false ? "secondary" : "outline"}
-              aria-pressed={question.visible !== false}
-              onClick={() => setQuestionVisible(true)}
-            >
-              Frage anzeigen
-            </Button>
-            <Button
-              variant={question.visible === false ? "secondary" : "outline"}
-              aria-pressed={question.visible === false}
-              onClick={() => setQuestionVisible(false)}
-            >
-              Scoreboard anzeigen
-            </Button>
-            <Button variant="ghost" onClick={dismiss}>
-              Frage beenden
-            </Button>
-          </div>
-        </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="question-list-empty">
+          Noch keine Fragen. Füge deine Fragen über den Dialog hinzu.
+        </p>
       )}
-      {error && (
+      <div className="question-control-bar">
+        <div className="question-start-controls">
+          <Button
+            disabled={!ready || !chosen}
+            onClick={() => {
+              if (chosen)
+                publish(chosen.text, Number(durations[chosen.number] ?? 60), {
+                  number: chosen.number,
+                  options: chosen.options,
+                });
+            }}
+          >
+            Frage starten
+          </Button>
+          <span>
+            {chosen
+              ? `Ausgewählt: Frage ${chosen.number}`
+              : "Keine Frage ausgewählt"}
+          </span>
+        </div>
+        <div className="question-view-controls">
+          <Button
+            variant={
+              question?.visible !== false && question ? "secondary" : "outline"
+            }
+            disabled={!question}
+            aria-pressed={!!question && question.visible !== false}
+            onClick={() => setQuestionVisible(true)}
+          >
+            Frage anzeigen
+          </Button>
+          <Button
+            variant={
+              !question || question.visible === false ? "secondary" : "outline"
+            }
+            aria-pressed={!question || question.visible === false}
+            onClick={() => setQuestionVisible(false)}
+          >
+            Scoreboard anzeigen
+          </Button>
+          <Button variant="ghost" disabled={!question} onClick={dismiss}>
+            Frage beenden
+          </Button>
+        </div>
+      </div>
+      <p className="question-live-status" role="status">
+        {question
+          ? `Frage ${question.number ?? 1} · ${remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`
+          : "Scoreboard wird angezeigt"}
+      </p>
+      {(error || bankError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error || bankError}</AlertDescription>
         </Alert>
       )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Fragen bearbeiten</DialogTitle>
+            <DialogDescription>
+              Eine Frage pro Zeile. Nummern und Antworten sind optional.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            id="question-bank-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              try {
+                parseQuestionList(draft);
+                if (saveBank(draft, durations)) {
+                  setSelected(0);
+                  setOpen(false);
+                }
+              } catch (error) {
+                setDraftError((error as Error).message);
+              }
+            }}
+          >
+            <Field data-invalid={!!draftError}>
+              <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
+              <Textarea
+                id="quiz-question"
+                maxLength={50000}
+                rows={10}
+                className="question-list-input"
+                aria-invalid={!!draftError}
+                aria-describedby="question-list-help"
+                placeholder={
+                  "1. Welcher Planet?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
+                }
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  setDraftError("");
+                }}
+              />
+              <FieldDescription id="question-list-help">
+                Beispiel: 1. Frage; (Antwort A) (Antwort B). Leerzeilen werden
+                übersprungen. Ohne Nummer wird automatisch durchnummeriert.
+              </FieldDescription>
+            </Field>
+            {draftError && (
+              <p role="alert" className="question-form-error">
+                {draftError}
+              </p>
+            )}
+          </form>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button type="submit" form="question-bank-form">
+              Fragen speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

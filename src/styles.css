@@ -843,3 +843,112 @@ h1 {
     flex-shrink: 1;
   }
 }
+.question-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.question-list-heading h2 {
+  margin: 0;
+}
+.question-list-heading h2 span {
+  margin-left: 8px;
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+.prepared-question-list {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.prepared-question-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.prepared-question-list li:last-child {
+  border-bottom: 0;
+}
+.prepared-question-list li[data-selected="true"] {
+  background: var(--muted);
+}
+.prepared-question-list .question-pick {
+  justify-content: flex-start;
+  height: auto;
+  min-height: 36px;
+  white-space: normal;
+  text-align: left;
+  align-items: baseline;
+}
+.question-row-number {
+  color: var(--muted-foreground);
+  min-width: 24px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.question-row-duration {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.question-row-duration input {
+  text-align: right;
+}
+.question-control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.question-start-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.question-start-controls > span,
+.question-live-status,
+.question-list-empty {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.question-live-status {
+  margin: 14px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.question-form-error {
+  color: var(--destructive);
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+@keyframes countdown-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.4;
+  }
+  85% {
+    opacity: 0.4;
+  }
+}
+@media (max-width: 640px) {
+  .prepared-question-list li {
+    gap: 8px;
+    padding: 8px;
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+  .question-view-controls {
+    gap: 6px;
+  }
+}

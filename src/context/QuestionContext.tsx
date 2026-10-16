@@ -152,10 +152,16 @@ export function useQuestion() {
 export function useRemainingSeconds(question: QuizQuestion | null) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    setNow(Date.now());
-    if (!question) return;
-    const timer = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(timer);
+    let timer: ReturnType<typeof setTimeout>;
+    function tick() {
+      const time = Date.now();
+      setNow(time);
+      if (!question || time >= question.endsAt) return;
+      const untilBoundary = (question.endsAt - time) % 1000;
+      timer = setTimeout(tick, untilBoundary || 1000);
+    }
+    tick();
+    return () => clearTimeout(timer);
   }, [question]);
   return question ? Math.max(0, Math.ceil((question.endsAt - now) / 1000)) : 0;
 }

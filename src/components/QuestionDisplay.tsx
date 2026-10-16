@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   type QuizQuestion,
   useRemainingSeconds,
@@ -5,6 +6,12 @@ import {
 } from "../context/QuestionContext";
 export function QuestionDisplay({ question }: { question: QuizQuestion }) {
   const remaining = useRemainingSeconds(question);
+  const urgent = remaining > 0 && remaining <= 10;
+  // Align the CSS pulse to this countdown's deadline, even when opening mid-second.
+  const pulseDelay = useMemo(() => {
+    const elapsed = (((Date.now() - question.endsAt) % 1000) + 1000) % 1000;
+    return `-${elapsed}ms`;
+  }, [question.endsAt, urgent]);
   return (
     <main className="question-display">
       <p className="eyebrow">Frage {question.number ?? 1}</p>
@@ -20,7 +27,8 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
         </ol>
       )}
       <div
-        className={`question-countdown${remaining > 0 && remaining <= 10 ? " countdown-urgent" : ""}`}
+        className={`question-countdown${urgent ? " countdown-urgent" : ""}`}
+        style={{ animationDelay: pulseDelay }}
         role="timer"
         aria-label="Verbleibende Zeit"
       >
