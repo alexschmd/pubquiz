@@ -14,6 +14,7 @@ export interface QuizQuestion {
   number?: number;
   options?: string[];
   visible?: boolean;
+  revealedOptions?: number[];
 }
 export function parseQuestion(raw: string | null): QuizQuestion | null {
   if (!raw) return null;
@@ -47,8 +48,25 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
     throw new Error("Ungültige Antworten");
   if ("visible" in data && typeof data.visible !== "boolean")
     throw new Error("Ungültige Ansicht");
+  if (
+    "revealedOptions" in data &&
+    (!Array.isArray(data.revealedOptions) ||
+      data.revealedOptions.some(
+        (index) =>
+          !Number.isInteger(index) ||
+          index < 0 ||
+          index >=
+            ("options" in data && Array.isArray(data.options)
+              ? data.options.length
+              : 0),
+      ))
+  )
+    throw new Error("Ungültige Antwortfreigabe");
   return {
     text: data.text,
+    ...("revealedOptions" in data
+      ? { revealedOptions: data.revealedOptions as number[] }
+      : {}),
     endsAt: data.endsAt,
     ...("number" in data ? { number: data.number as number } : {}),
     ...("options" in data ? { options: data.options as string[] } : {}),
@@ -65,6 +83,7 @@ interface QuestionState {
     details?: Pick<PreparedQuestion, "number" | "options">,
   ) => boolean;
   setQuestionVisible: (visible: boolean) => void;
+  revealOptions: (indices: number[]) => void;
   dismiss: () => void;
 }
 const Context = createContext<QuestionState | null>(null);
@@ -126,7 +145,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       return persist({
         text: text.trim(),
         endsAt: Date.now() + seconds * 1000,
-        ...(details ? { ...details, visible: true } : {}),
+        ...(details ? { ...details, visible: true, revealedOptions: [] } : {}),
       });
     }
     return {
@@ -136,6 +155,18 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       publish,
       setQuestionVisible: (visible: boolean) => {
         if (ready && question) persist({ ...question, visible });
+      },
+      revealOptions: (indices: number[]) => {
+        if (ready && question)
+          persist({
+            ...question,
+            revealedOptions: [...new Set(indices)].filter(
+              (index) =>
+                Number.isInteger(index) &&
+                index >= 0 &&
+                index < (question.options?.length ?? 0),
+            ),
+          });
       },
       dismiss: () => {
         if (ready) persist(null);

@@ -20,8 +20,15 @@ import {
 } from "../context/QuestionContext";
 const BANK_KEY = "pubquiz-question-bank";
 export function QuestionComposer() {
-  const { question, ready, error, publish, dismiss, setQuestionVisible } =
-    useQuestion();
+  const {
+    question,
+    ready,
+    error,
+    publish,
+    dismiss,
+    setQuestionVisible,
+    revealOptions,
+  } = useQuestion();
   const [text, setText] = useState("");
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
@@ -167,6 +174,48 @@ export function QuestionComposer() {
           </Button>
         </div>
       </div>
+      {!!question?.options?.length && (
+        <div className="answer-reveal-controls">
+          <span>Antworten freigeben · Frage {question.number ?? 1}</span>
+          <div>
+            {question.options.map((option, index) => {
+              const shown = question.revealedOptions?.includes(index) ?? false;
+              return (
+                <Button
+                  key={String.fromCharCode(65 + index)}
+                  variant={shown ? "secondary" : "outline"}
+                  aria-pressed={shown}
+                  aria-label={`Antwort ${String.fromCharCode(65 + index)} ${shown ? "verbergen" : "anzeigen"}`}
+                  title={option}
+                  onClick={() =>
+                    revealOptions(
+                      shown
+                        ? (question.revealedOptions ?? []).filter(
+                            (item) => item !== index,
+                          )
+                        : [...(question.revealedOptions ?? []), index],
+                    )
+                  }
+                >
+                  {String.fromCharCode(65 + index)} ·{" "}
+                  {shown ? "Sichtbar" : "Anzeigen"}
+                </Button>
+              );
+            })}
+            <Button
+              variant="outline"
+              onClick={() =>
+                revealOptions(question.options!.map((_, index) => index))
+              }
+            >
+              Alle anzeigen
+            </Button>
+            <Button variant="ghost" onClick={() => revealOptions([])}>
+              Alle verbergen
+            </Button>
+          </div>
+        </div>
+      )}
       <p className="question-live-status" role="status">
         {question
           ? `Frage ${question.number ?? 1} · ${remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`

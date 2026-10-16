@@ -56,4 +56,17 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
   expect(screen.getByRole("button", { name: "5. Zweite Frage?" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  const initial = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
+  expect(initial.revealedOptions).toEqual([]);
+  fireEvent.click(screen.getByRole("button", { name: "Antwort A anzeigen" }));
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).revealedOptions,
+  ).toEqual([0]);
+  fireEvent.click(screen.getByRole("button", { name: "Alle anzeigen" }));
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).revealedOptions,
+  ).toEqual([0, 1]);
+  fireEvent.click(screen.getByRole("button", { name: "Alle verbergen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual(initial);
 });
