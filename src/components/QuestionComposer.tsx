@@ -1,3 +1,11 @@
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+} from "./ui/select";
 import { QUESTION_IMPORT_PROMPT } from "../lib/question-import-prompt";
 import { Eye, EyeOff, Plus, ListChecks, Copy, Check } from "lucide-react";
 import {
@@ -16,6 +24,8 @@ import {
   InputGroupInput,
   InputGroupAddon,
   InputGroupText,
+  InputGroupTextarea,
+  InputGroupButton,
 } from "./ui/input-group";
 import { Field, FieldLabel, FieldDescription } from "./ui/field";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -115,17 +125,29 @@ export function QuestionComposer() {
         <div className="question-compact-selection">
           <Field>
             <FieldLabel htmlFor="question-number">Frage auswählen</FieldLabel>
-            <select
-              id="question-number"
-              value={selected}
-              onChange={(event) => setSelected(Number(event.target.value))}
+            <Select
+              value={String(selected)}
+              onValueChange={(value) => {
+                if (value !== null) setSelected(Number(value));
+              }}
+              items={questions.map((item, index) => ({
+                value: String(index),
+                label: `Frage ${item.number}: ${item.text}`,
+              }))}
             >
-              {questions.map((item, index) => (
-                <option key={item.number} value={index}>
-                  Frage {item.number}: {item.text}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="question-number" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {questions.map((item, index) => (
+                    <SelectItem key={item.number} value={String(index)}>
+                      Frage {item.number}: {item.text}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </Field>
           <Field className="question-compact-duration">
             <FieldLabel htmlFor="selected-duration">Zeit</FieldLabel>
@@ -271,41 +293,6 @@ export function QuestionComposer() {
               Eine Frage pro Zeile. Nummern und Antworten sind optional.
             </DialogDescription>
           </DialogHeader>
-          <div className="question-prompt-copy">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(QUESTION_IMPORT_PROMPT);
-                  setCopyState("copied");
-                } catch {
-                  setCopyState("failed");
-                }
-              }}
-            >
-              {copyState === "copied" ? (
-                <Check data-icon="inline-start" />
-              ) : (
-                <Copy data-icon="inline-start" />
-              )}
-              {copyState === "copied" ? "Prompt kopiert" : "Prompt kopieren"}
-            </Button>
-            <p role="status">
-              {copyState === "failed"
-                ? "Kopieren nicht möglich. Markiere und kopiere den Prompt unten manuell."
-                : "Diesen Prompt zusammen mit deinem Fragendokument einer KI geben. Das Ergebnis hier einfügen."}
-            </p>
-            {copyState === "failed" && (
-              <Textarea
-                readOnly
-                aria-label="Prompt zum manuellen Kopieren"
-                value={QUESTION_IMPORT_PROMPT}
-                className="question-prompt-fallback"
-                onFocus={(event) => event.target.select()}
-              />
-            )}
-          </div>
           <form
             id="question-bank-form"
             onSubmit={(event) => {
@@ -323,22 +310,65 @@ export function QuestionComposer() {
           >
             <Field data-invalid={!!draftError}>
               <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
-              <Textarea
-                id="quiz-question"
-                maxLength={50000}
-                rows={10}
-                className="question-list-input"
-                aria-invalid={!!draftError}
-                aria-describedby="question-list-help"
-                placeholder={
-                  "1. Welcher Planet?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
-                }
-                value={draft}
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  setDraftError("");
-                }}
-              />
+              <InputGroup>
+                <InputGroupTextarea
+                  id="quiz-question"
+                  maxLength={50000}
+                  rows={10}
+                  className="question-list-input"
+                  aria-invalid={!!draftError}
+                  aria-describedby="question-list-help"
+                  placeholder={
+                    "1. Welcher Planet?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
+                  }
+                  value={draft}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    setDraftError("");
+                  }}
+                />
+                <InputGroupAddon align="block-end" className="justify-end">
+                  <InputGroupButton
+                    type="button"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          QUESTION_IMPORT_PROMPT,
+                        );
+                        setCopyState("copied");
+                      } catch {
+                        setCopyState("failed");
+                      }
+                    }}
+                  >
+                    {copyState === "copied" ? (
+                      <Check data-icon="inline-start" />
+                    ) : (
+                      <Copy data-icon="inline-start" />
+                    )}
+                    {copyState === "copied"
+                      ? "Prompt kopiert"
+                      : "Prompt kopieren"}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
+              <p className="question-copy-status" role="status">
+                {copyState === "failed"
+                  ? "Kopieren nicht möglich. Den Prompt unten manuell kopieren."
+                  : copyState === "copied"
+                    ? "Prompt kopiert. Zusammen mit dem Fragendokument einer KI geben und das Ergebnis hier einfügen."
+                    : "Mit dem Prompt kannst du ein Fragendokument von einer KI ins passende Format bringen lassen."}
+              </p>
+              {copyState === "failed" && (
+                <Textarea
+                  readOnly
+                  aria-label="Prompt zum manuellen Kopieren"
+                  value={QUESTION_IMPORT_PROMPT}
+                  className="question-prompt-fallback"
+                  onFocus={(event) => event.target.select()}
+                />
+              )}
               <FieldDescription id="question-list-help">
                 Beispiel: 1. Frage; (Antwort A) (Antwort B). Leerzeilen werden
                 übersprungen. Ohne Nummer wird automatisch durchnummeriert.

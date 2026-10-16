@@ -1123,3 +1123,9 @@ h1 {
   width: 100%;
   flex-basis: 100%;
 }
+.question-copy-status {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.5;
+}

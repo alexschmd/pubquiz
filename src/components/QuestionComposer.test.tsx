@@ -33,9 +33,15 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.change(screen.getByLabelText("Zeit für Frage 4"), {
     target: { value: "30" },
   });
-  fireEvent.change(screen.getByLabelText("Frage auswählen"), {
-    target: { value: "1" },
+  fireEvent.click(screen.getByRole("combobox"));
+  const option = await screen.findByRole("option", {
+    name: "Frage 5: Zweite Frage?",
   });
+  fireEvent.mouseMove(option);
+  fireEvent.mouseDown(option);
+  fireEvent.mouseUp(option);
+  fireEvent.click(option);
+  await screen.findByLabelText("Zeit für Frage 5");
   fireEvent.change(screen.getByLabelText("Zeit für Frage 5"), {
     target: { value: "90" },
   });
@@ -62,9 +68,7 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
-  expect(
-    screen.getByRole("option", { name: "Frage 5: Zweite Frage?" }),
-  ).toBeTruthy();
+  expect(screen.getByRole("combobox")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   const initial = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
   expect(initial.revealedOptions).toEqual([]);
