@@ -159,13 +159,9 @@ function Manage() {
           </div>
         )}
       </section>
-      <div className="management-footnote">
-        <span>Änderungen werden automatisch gespeichert.</span>
-        <span role="status" className="sr-only">
-          {message}
-        </span>
-        <span>Max. 10 Teams</span>
-      </div>
+      <span role="status" className="sr-only">
+        {message}
+      </span>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl">
           <form
