@@ -18,3 +18,9 @@ Ran `npx -y react-doctor@latest --verbose`, followed by a branch scan with `--sc
 - The full scan also flagged generated `.output` dependency code. Inspection showed React's import-map serialization applies `scriptRegex` / `scriptReplacer` after `JSON.stringify`; no application JSON HTML sink was found.
 
 Typecheck, four regression tests and production build pass after the changes. No diagnostic suppression was added.
+
+## Restored Once UI effects
+
+Restored the original mask/blur reveal (2s scoreboard, 1s management) as a focused CSS animation, plus Once UI's gradient canvas and radial mask geometry. Backgrounds were static in the original app; no continuous decorative motion was added. The reveal is disabled for `prefers-reduced-motion`. A shared Motion LayoutGroup connects ranking transitions across rows.
+
+Browser inspection confirmed the reveal moves from mask-position 100% / blur 8px, through 50% / 4px, to 0% / 0px. Typecheck, regression tests and production build pass. React Doctor remains at 77/100 with the same two reviewed warnings.

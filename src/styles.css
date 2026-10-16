@@ -267,3 +267,85 @@ footer {
     font-size: clamp(3rem, 17vw, 8rem);
   }
 }
+
+/* Preserve the original Once UI reveal: a left-to-right mask with an 8px blur. */
+.reveal-fx {
+  animation: once-reveal var(--reveal-duration, 2s) ease-in-out both;
+  mask-image: linear-gradient(to right, black 0%, black 25%, transparent 50%);
+  mask-size: 300% 100%;
+}
+.reveal-fast {
+  --reveal-duration: 1s;
+}
+@keyframes once-reveal {
+  from {
+    mask-position: 100% 0;
+    filter: blur(0.5rem);
+  }
+  to {
+    mask-position: 0 0;
+    filter: blur(0);
+  }
+}
+.team-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(1000vh at 50% 0%, black 0%, transparent 100%);
+}
+.team-gradient {
+  position: absolute;
+  width: 400%;
+  height: 400%;
+  left: -150%;
+  top: -150%;
+  opacity: 0.9;
+  background: radial-gradient(
+    ellipse 25% 20% at 50% 37.5%,
+    var(--team-color),
+    #101116
+  );
+}
+.team-background-corner {
+  mask-image: radial-gradient(1000vh at 0% 0%, black 0%, transparent 100%);
+}
+.team-background-corner .team-gradient {
+  background: radial-gradient(
+    ellipse 25% 25% at 37.5% 37.5%,
+    var(--team-color),
+    #101116
+  );
+}
+.score-tile,
+.team-card,
+.scoreboard-empty {
+  position: relative;
+  isolation: isolate;
+}
+.team-card {
+  overflow: hidden;
+}
+.score-tile > :not(.team-background),
+.team-card > :not(.team-background),
+.scoreboard-empty > :not(.team-background) {
+  position: relative;
+  z-index: 1;
+}
+.score-tile > h1:not(.team-background) {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+}
+.scoreboard-empty {
+  min-height: 100dvh;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-fx {
+    animation: none;
+    mask-image: none;
+    filter: none;
+  }
+}

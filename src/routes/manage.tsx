@@ -1,3 +1,4 @@
+import { TeamBackground } from "../components/TeamBackground";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTeams } from "../context/TeamsContext";
@@ -24,7 +25,7 @@ function Manage() {
     );
   }
   return (
-    <main className="manage">
+    <main className={`manage${ready ? " reveal-fx reveal-fast" : ""}`}>
       <header>
         <div>
           <p className="eyebrow">PUBQUIZ · SPIELLEITUNG</p>
@@ -73,6 +74,7 @@ function Manage() {
                 key={team.id}
                 style={{ borderTopColor: team.color_start }}
               >
+                <TeamBackground color={team.color_start} />
                 <h2>{team.name}</h2>
                 <p className="manage-score">
                   {team.score}
