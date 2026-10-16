@@ -188,10 +188,81 @@ export function QuestionComposer() {
           </Button>
         )}
       </div>
+      <section className="question-session" aria-label="Laufende Frage">
+        <div className="question-session-heading" role="status">
+          <span>
+            {question
+              ? remaining === 0
+                ? "Zeit abgelaufen"
+                : question.pausedRemainingMs !== undefined
+                  ? "Pausiert"
+                  : "Frage läuft"
+              : "Bereit für die nächste Frage"}
+          </span>
+          <span>
+            {question && question.visible !== false
+              ? "Frage auf dem Scoreboard"
+              : "Punktestand auf dem Scoreboard"}
+          </span>
+        </div>
+        {question ? (
+          <div className="question-session-content">
+            <div>
+              <span className="question-session-number">
+                Frage {question.number ?? 1}
+              </span>
+              <h3>{question.text}</h3>
+            </div>
+            <strong className="question-session-time">
+              {formatCountdown(remaining)}
+            </strong>
+          </div>
+        ) : (
+          <p className="question-session-empty">
+            Wähle unten eine Frage und starte sie, wenn es losgehen soll.
+          </p>
+        )}
+        <div className="question-timer-controls">
+          <Button
+            variant="outline"
+            disabled={!question || remaining === 0}
+            onClick={toggleTimer}
+          >
+            {question?.pausedRemainingMs !== undefined ? (
+              <Play data-icon="inline-start" />
+            ) : (
+              <Pause data-icon="inline-start" />
+            )}
+            {question?.pausedRemainingMs !== undefined
+              ? "Zeit fortsetzen"
+              : "Zeit stoppen"}
+          </Button>
+          <Button variant="outline" disabled={!question} onClick={restartTimer}>
+            <RotateCcw data-icon="inline-start" />
+            Zeit neu starten
+          </Button>
+        </div>
+        <div className="question-screen-switch">
+          <Button
+            variant="outline"
+            disabled={!question}
+            onClick={() => setQuestionVisible(question?.visible === false)}
+          >
+            {!question || question.visible === false
+              ? "Zur Frage wechseln"
+              : "Zum Scoreboard wechseln"}
+          </Button>
+          <Button variant="ghost" disabled={!question} onClick={dismiss}>
+            Frage beenden
+          </Button>
+        </div>
+      </section>
       {!!questions.length ? (
         <div className="question-compact-selection">
           <Field>
-            <FieldLabel htmlFor="question-number">Frage auswählen</FieldLabel>
+            <FieldLabel htmlFor="question-number">
+              Nächste Frage vorbereiten
+            </FieldLabel>
             <Select
               value={String(selected)}
               onValueChange={(value) => {
@@ -284,7 +355,7 @@ export function QuestionComposer() {
         <div className="answer-reveal-controls answer-reveal-list">
           <span>
             Antworten · Frage {chosen.number}
-            {selectedIsActive ? " · Live" : " · Beim Start sichtbar"}
+            {selectedIsActive ? " · Live" : " · Vorbereitung"}
           </span>
           <div>
             {chosen.options.map((option, index) => {
@@ -354,8 +425,11 @@ export function QuestionComposer() {
       {!!chosen?.options.length && (
         <div className="solution-control">
           <p>
-            Markiere mit den Haken alle richtigen Antworten. Beim Aufdecken
-            werden sie grün hervorgehoben und die übrigen abgedimmt.
+            {selectedIsActive
+              ? question?.solutionRevealed
+                ? "Die richtigen Antworten sind auf dem Scoreboard hervorgehoben."
+                : "Zeigt alle Antworten und hebt die richtigen hervor."
+              : "Mit dem Auge legst du fest, welche Antworten beim Start sichtbar sind. Die Haken markieren die richtigen Antworten."}
           </p>
           <Button
             variant="outline"
@@ -368,45 +442,6 @@ export function QuestionComposer() {
           </Button>
         </div>
       )}
-      <div className="question-timer-controls">
-        <Button
-          variant="outline"
-          disabled={!question || remaining === 0}
-          onClick={toggleTimer}
-        >
-          {question?.pausedRemainingMs !== undefined ? (
-            <Play data-icon="inline-start" />
-          ) : (
-            <Pause data-icon="inline-start" />
-          )}
-          {question?.pausedRemainingMs !== undefined
-            ? "Zeit fortsetzen"
-            : "Zeit stoppen"}
-        </Button>
-        <Button variant="outline" disabled={!question} onClick={restartTimer}>
-          <RotateCcw data-icon="inline-start" />
-          Zeit neu starten
-        </Button>
-      </div>
-      <div className="question-screen-switch">
-        <Button
-          variant="outline"
-          disabled={!question}
-          onClick={() => setQuestionVisible(question?.visible === false)}
-        >
-          {!question || question.visible === false
-            ? "Zur Frage wechseln"
-            : "Zum Scoreboard wechseln"}
-        </Button>
-        <Button variant="ghost" disabled={!question} onClick={dismiss}>
-          Frage beenden
-        </Button>
-      </div>
-      <p className="question-live-status" role="status">
-        {question
-          ? `Frage ${question.number ?? 1} · ${question.pausedRemainingMs !== undefined ? `${formatCountdown(remaining)} · Gestoppt` : remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}`
-          : "Scoreboard wird angezeigt"}
-      </p>
       {(error || bankError) && (
         <Alert variant="destructive">
           <AlertDescription>{error || bankError}</AlertDescription>
