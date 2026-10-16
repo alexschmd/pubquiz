@@ -95,6 +95,7 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
   expect(screen.getByRole("combobox")).toBeTruthy();
+  fireEvent.click(screen.getByText("Frage beenden", { selector: "button" }));
   fireEvent.click(screen.getByRole("button", { name: "Alle anzeigen" }));
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   expect(
@@ -197,4 +198,40 @@ test("edits imported questions and multiple correct answers in form fields", asy
   expect(
     ((await screen.findByLabelText("Fragen")) as HTMLTextAreaElement).value,
   ).toContain("(2*) (3) (4*)");
+});
+
+test("advances an expired question and turns start into end", async () => {
+  localStorage.setItem(
+    "pubquiz-question-bank",
+    JSON.stringify({
+      text: "1. Erste Frage?\n2. Zweite Frage?",
+      durations: {},
+    }),
+  );
+  localStorage.setItem(
+    QUESTION_KEY,
+    JSON.stringify({
+      number: 1,
+      text: "Erste Frage?",
+      options: [],
+      endsAt: Date.now() - 1000,
+      durationMs: 60000,
+      visible: true,
+    }),
+  );
+  render(
+    <QuestionProvider>
+      <QuestionComposer />
+    </QuestionProvider>,
+  );
+  fireEvent.click(
+    await screen.findByText("Nächste Frage", { selector: "button" }),
+  );
+  expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
+  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
+  fireEvent.click(screen.getByText("Frage beenden", { selector: "button" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
+  expect(screen.getByRole("button", { name: "Frage starten" })).toBeTruthy();
 });

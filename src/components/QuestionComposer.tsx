@@ -121,6 +121,16 @@ export function QuestionComposer() {
   }, []);
   const chosen = questions[selected];
   const remaining = useRemainingSeconds(question);
+  const activeIndex = questions.findIndex(
+    (item) => item.number === question?.number,
+  );
+  const hasNextQuestion =
+    activeIndex >= 0 && activeIndex < questions.length - 1;
+  const mainAction = question
+    ? remaining === 0 && hasNextQuestion
+      ? "Nächste Frage"
+      : "Frage beenden"
+    : "Frage starten";
   const selectedIsActive =
     !!chosen &&
     question?.number === chosen.number &&
@@ -350,8 +360,14 @@ export function QuestionComposer() {
       <div className="question-control-bar">
         <div className="question-start-controls">
           <Button
-            disabled={!ready || !chosen}
+            disabled={!ready || (!question && !chosen)}
             onClick={() => {
+              if (question) {
+                if (remaining === 0 && hasNextQuestion)
+                  setSelected(activeIndex + 1);
+                dismiss();
+                return;
+              }
               if (chosen)
                 publish(chosen.text, Number(durations[chosen.number] ?? 60), {
                   number: chosen.number,
@@ -363,8 +379,12 @@ export function QuestionComposer() {
                 });
             }}
           >
-            Frage starten
-            <ChevronRight data-icon="inline-end" />
+            {mainAction}
+            {mainAction === "Frage beenden" ? (
+              <Square data-icon="inline-end" />
+            ) : (
+              <ChevronRight data-icon="inline-end" />
+            )}
           </Button>
         </div>
       </div>
