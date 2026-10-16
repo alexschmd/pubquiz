@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupText,
+} from "./ui/input-group";
 import { Field, FieldLabel, FieldDescription } from "./ui/field";
 import { Alert, AlertDescription } from "./ui/alert";
 import {
@@ -86,7 +91,7 @@ export function QuestionComposer() {
         <h2 id="question-title">
           Fragen <span>{questions.length}</span>
         </h2>
-        <Button variant="ghost" disabled={!bankReady} onClick={edit}>
+        <Button disabled={!bankReady} onClick={edit}>
           {questions.length ? "Fragen bearbeiten" : "Fragen hinzufügen"}
         </Button>
       </div>
@@ -97,29 +102,32 @@ export function QuestionComposer() {
               <Button
                 variant="ghost"
                 className="question-pick"
-                aria-label={`${item.number}. ${item.text}`}
+                aria-label={`Frage ${item.number}`}
                 aria-pressed={selected === index}
                 onClick={() => setSelected(index)}
               >
-                <span className="question-row-number">{item.number}.</span>
-                <span>{item.text}</span>
+                <span>Frage {item.number}</span>
               </Button>
               <div className="question-row-duration">
-                <Input
-                  aria-label={`Zeit für Frage ${item.number}`}
-                  type="number"
-                  min={1}
-                  max={3600}
-                  step={1}
-                  value={durations[item.number] ?? "60"}
-                  onChange={(event) =>
-                    saveBank(text, {
-                      ...durations,
-                      [item.number]: event.target.value,
-                    })
-                  }
-                />
-                <span>Sek.</span>
+                <InputGroup>
+                  <InputGroupInput
+                    aria-label={`Zeit für Frage ${item.number}`}
+                    type="number"
+                    min={1}
+                    max={3600}
+                    step={1}
+                    value={durations[item.number] ?? "60"}
+                    onChange={(event) =>
+                      saveBank(text, {
+                        ...durations,
+                        [item.number]: event.target.value,
+                      })
+                    }
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText>Sek.</InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
               </div>
             </li>
           ))}
@@ -186,7 +194,7 @@ export function QuestionComposer() {
                   variant={shown ? "secondary" : "outline"}
                   aria-pressed={shown}
                   aria-label={`Antwort ${String.fromCharCode(65 + index)} ${shown ? "verbergen" : "anzeigen"}`}
-                  title={option}
+
                   onClick={() =>
                     revealOptions(
                       shown

@@ -92,78 +92,80 @@ function Manage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <QuestionComposer />
-      <section className="team-sheet" aria-label="Teamverwaltung">
-        <div className="sheet-heading">
-          <div>
-            <h2>Teams</h2>
-            <span>{ready ? `${teams.length} von ${MAX_TEAMS}` : "…"}</span>
+      <div className="management-columns">
+        <QuestionComposer />
+        <section className="team-sheet" aria-label="Teamverwaltung">
+          <div className="sheet-heading">
+            <div>
+              <h2>Teams</h2>
+              <span>{ready ? `${teams.length} von ${MAX_TEAMS}` : "…"}</span>
+            </div>
+            <Button variant="ghost" disabled={!ready} onClick={edit}>
+              <Settings2 data-icon="inline-start" />
+              Bearbeiten
+            </Button>
           </div>
-          <Button variant="ghost" disabled={!ready} onClick={edit}>
-            <Settings2 data-icon="inline-start" />
-            Bearbeiten
-          </Button>
-        </div>
-        {!ready ? (
-          <div className="management-loading" aria-busy="true">
-            Teams werden geladen …
-          </div>
-        ) : teams.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <Users className="mx-auto size-6 text-muted-foreground" />
-              <EmptyTitle>Noch keine Teams</EmptyTitle>
-              <EmptyDescription>
-                Lege die Teams für deinen Quizabend an.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={edit}>
-                <Plus data-icon="inline-start" />
-                Team anlegen
-              </Button>
-            </EmptyContent>
-          </Empty>
-        ) : (
-          <div className="management-tiles">
-            {[...teams]
-              .sort((a, b) => a.id - b.id)
-              .map((team) => (
-                <article
-                  className="management-tile"
-                  key={team.id}
-                  style={tileStyle(team.color_start)}
-                >
-                  <div className="team-identity">
-                    <h3>{team.name}</h3>
-                  </div>
-                  <div className="tile-score">
-                    <output aria-label={`${team.name}: Punkte`}>
-                      {team.score}
-                    </output>
-                    <span>Punkte</span>
-                  </div>
-                  <div className="tile-controls">
-                    <Button
-                      variant="outline"
-                      aria-label={`${team.name}: einen Punkt abziehen`}
-                      onClick={() => score(team, -1)}
-                    >
-                      <Minus />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      aria-label={`${team.name}: einen Punkt hinzufügen`}
-                      onClick={() => score(team, 1)}
-                    >
-                      <Plus />
-                    </Button>
-                  </div>
-                </article>
-              ))}
-          </div>
-        )}
-      </section>
+          {!ready ? (
+            <div className="management-loading" aria-busy="true">
+              Teams werden geladen …
+            </div>
+          ) : teams.length === 0 ? (
+            <Empty>
+              <EmptyHeader>
+                <Users className="mx-auto size-6 text-muted-foreground" />
+                <EmptyTitle>Noch keine Teams</EmptyTitle>
+                <EmptyDescription>
+                  Lege die Teams für deinen Quizabend an.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button onClick={edit}>
+                  <Plus data-icon="inline-start" />
+                  Team anlegen
+                </Button>
+              </EmptyContent>
+            </Empty>
+          ) : (
+            <div className="management-tiles">
+              {[...teams]
+                .sort((a, b) => a.id - b.id)
+                .map((team) => (
+                  <article
+                    className="management-tile"
+                    key={team.id}
+                    style={tileStyle(team.color_start)}
+                  >
+                    <div className="team-identity">
+                      <h3>{team.name}</h3>
+                    </div>
+                    <div className="tile-score">
+                      <output aria-label={`${team.name}: Punkte`}>
+                        {team.score}
+                      </output>
+                      <span>Punkte</span>
+                    </div>
+                    <div className="tile-controls">
+                      <Button
+                        variant="outline"
+                        aria-label={`${team.name}: einen Punkt abziehen`}
+                        onClick={() => score(team, -1)}
+                      >
+                        <Minus />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        aria-label={`${team.name}: einen Punkt hinzufügen`}
+                        onClick={() => score(team, 1)}
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                  </article>
+                ))}
+            </div>
+          )}
+        </section>
+      </div>
       <span role="status" className="sr-only">
         {message}
       </span>

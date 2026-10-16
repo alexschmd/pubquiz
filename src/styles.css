@@ -999,3 +999,50 @@ h1 {
     padding-top: 120px;
   }
 }
+.management {
+  max-width: 1440px;
+}
+.management-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  padding-top: 28px;
+  align-items: start;
+}
+.management-columns .question-composer {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}
+.management-columns .team-sheet {
+  margin: 0;
+  min-width: 0;
+}
+.management-columns .management-tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.question-row-duration {
+  width: 108px;
+}
+.question-row-duration [data-slot="input-group"] {
+  gap: 0;
+}
+.question-list-heading {
+  min-height: 32px;
+}
+@media (max-width: 1000px) {
+  .management-columns {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .management-columns .management-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .management-columns .management-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
