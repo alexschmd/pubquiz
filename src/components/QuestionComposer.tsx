@@ -245,9 +245,16 @@ export function QuestionComposer() {
                   ) : (
                     <EyeOff data-icon="inline-start" />
                   )}
-                  <span>
-                    {String.fromCharCode(65 + index)} · {option}
+                  <span className="answer-control-divider" aria-hidden="true">
+                    |
                   </span>
+                  <span className="answer-control-letter">
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span className="answer-control-divider" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="answer-control-text">{option}</span>
                 </Button>
               );
             })}

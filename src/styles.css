@@ -1134,7 +1134,7 @@ h1 {
 }
 .question-start-controls > [data-slot="button"] {
   width: 100%;
-  justify-content: space-between;
+  justify-content: center;
 }
 .question-compact-duration input[type="number"] {
   appearance: textfield;
@@ -1144,4 +1144,18 @@ h1 {
 .question-compact-duration input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.answer-reveal-list .answer-control-divider {
+  flex: none;
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+.answer-reveal-list .answer-control-letter {
+  flex: none;
+}
+.answer-reveal-list .answer-control-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
