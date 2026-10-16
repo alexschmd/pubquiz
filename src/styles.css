@@ -1425,3 +1425,4 @@ h1 {
 }
 .preview-control-trigger { display: inline-flex; border-radius: 6px; }
 .preview-control-trigger:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.question-session > .question-list-heading { margin-bottom: 0; }
