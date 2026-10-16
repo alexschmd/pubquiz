@@ -1,3 +1,4 @@
+import { SlidingNumber } from "../components/SlidingNumber";
 import { RevealFx } from "../components/RevealFx";
 import { TeamBackground } from "../components/TeamBackground";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -49,7 +50,9 @@ function Scoreboard() {
                       >
                         <TeamBackground color={team.color_start} />
                         <h1>{team.name}</h1>
-                        <p className="score">{team.score}</p>
+                        <p className="score">
+                          <SlidingNumber value={team.score} />
+                        </p>
                       </m.article>
                     ))}
                   </div>

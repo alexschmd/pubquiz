@@ -349,3 +349,27 @@ footer {
     filter: none;
   }
 }
+
+.sliding-number,
+.sliding-number-visual {
+  display: inline-flex;
+  vertical-align: bottom;
+}
+.sliding-number-visual {
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+.sliding-digit {
+  position: relative;
+  display: inline-block;
+  width: 1ch;
+  height: 1.1em;
+  overflow: hidden;
+}
+.sliding-digit-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
