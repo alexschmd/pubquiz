@@ -23,7 +23,7 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
     <main
       className={`question-display${shown.length ? " question-with-answers" : ""}`}
     >
-      <p className="eyebrow">Frage {question.number ?? 1}</p>
+      <p className="question-number-label">Frage {question.number ?? 1}</p>
       <h1>{question.text}</h1>
       <AnimatePresence>
         {!!shown.length && (
@@ -36,7 +36,7 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
           >
             {shown.map((option) => (
               <m.li
-                layout
+                layout="position"
                 data-solution={
                   question.solutionRevealed
                     ? question.correctOptions?.includes(option.index)
@@ -46,7 +46,14 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
                 }
                 key={option.index}
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{
+                  opacity:
+                    question.solutionRevealed &&
+                    !question.correctOptions?.includes(option.index)
+                      ? 0.4
+                      : 1,
+                  y: 0,
+                }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.25 }}
               >
