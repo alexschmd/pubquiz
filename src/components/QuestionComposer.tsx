@@ -39,7 +39,6 @@ import {
   InputGroupAddon,
   InputGroupText,
   InputGroupTextarea,
-  InputGroupButton,
 } from "./ui/input-group";
 import { Field, FieldLabel, FieldDescription } from "./ui/field";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -459,7 +458,33 @@ export function QuestionComposer() {
               </TabsList>
               <TabsContent value="text">
                 <Field data-invalid={!!draftError}>
-                  <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
+                  <div className="flex items-center justify-between gap-3">
+                    <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            QUESTION_IMPORT_PROMPT,
+                          );
+                          setCopyState("copied");
+                        } catch {
+                          setCopyState("failed");
+                        }
+                      }}
+                    >
+                      {copyState === "copied" ? (
+                        <Check data-icon="inline-start" />
+                      ) : (
+                        <Copy data-icon="inline-start" />
+                      )}
+                      {copyState === "copied"
+                        ? "Prompt kopiert"
+                        : "Prompt kopieren"}
+                    </Button>
+                  </div>
                   <InputGroup>
                     <InputGroupTextarea
                       id="quiz-question"
@@ -477,31 +502,6 @@ export function QuestionComposer() {
                         setDraftError("");
                       }}
                     />
-                    <InputGroupAddon align="block-end" className="justify-end">
-                      <InputGroupButton
-                        type="button"
-                        variant="ghost"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(
-                              QUESTION_IMPORT_PROMPT,
-                            );
-                            setCopyState("copied");
-                          } catch {
-                            setCopyState("failed");
-                          }
-                        }}
-                      >
-                        {copyState === "copied" ? (
-                          <Check data-icon="inline-start" />
-                        ) : (
-                          <Copy data-icon="inline-start" />
-                        )}
-                        {copyState === "copied"
-                          ? "Prompt kopiert"
-                          : "Prompt kopieren"}
-                      </InputGroupButton>
-                    </InputGroupAddon>
                   </InputGroup>
                   <p className="question-copy-status" role="status">
                     {copyState === "failed"
