@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
   type ReactNode,
 } from "react";
 import { parseTeams, type Team } from "../lib/teams";
@@ -41,42 +42,41 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
   }, []);
-  function persist(next: Team[]) {
-    try {
-      localStorage.setItem("teams", JSON.stringify(next));
-      setError(null);
-    } catch {
-      setError(
-        "Änderungen konnten nicht gespeichert werden. Bitte Browserspeicher prüfen.",
-      );
-      return false;
+  const value = useMemo(() => {
+    function persist(next: Team[]) {
+      try {
+        localStorage.setItem("teams", JSON.stringify(next));
+        setError(null);
+      } catch {
+        setError(
+          "Änderungen konnten nicht gespeichert werden. Bitte Browserspeicher prüfen.",
+        );
+        return false;
+      }
+      return true;
     }
-    return true;
-  }
-  function saveTeams(draft: Team[]) {
-    if (!ready) return false;
-    // Keep scores changed in another tab while the editor was open.
-    const next = draft.map((team) => ({
-      ...team,
-      score:
-        teams.find((current) => current.id === team.id)?.score ?? team.score,
-    }));
-    if (!persist(next)) return false;
-    setTeams(next);
-    return true;
-  }
-  function updateScore(id: number, delta: number) {
-    if (!ready) return;
-    const next = teams.map((team) =>
-      team.id === id ? { ...team, score: team.score + delta } : team,
-    );
-    if (persist(next)) setTeams(next);
-  }
-  return (
-    <Context.Provider value={{ teams, ready, error, saveTeams, updateScore }}>
-      {children}
-    </Context.Provider>
-  );
+    function saveTeams(draft: Team[]) {
+      if (!ready) return false;
+      // Keep scores changed in another tab while the editor was open.
+      const next = draft.map((team) => ({
+        ...team,
+        score:
+          teams.find((current) => current.id === team.id)?.score ?? team.score,
+      }));
+      if (!persist(next)) return false;
+      setTeams(next);
+      return true;
+    }
+    function updateScore(id: number, delta: number) {
+      if (!ready) return;
+      const next = teams.map((team) =>
+        team.id === id ? { ...team, score: team.score + delta } : team,
+      );
+      if (persist(next)) setTeams(next);
+    }
+    return { teams, ready, error, saveTeams, updateScore };
+  }, [teams, ready, error]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useTeams() {
   const state = useContext(Context);

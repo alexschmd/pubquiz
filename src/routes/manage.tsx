@@ -169,7 +169,7 @@ function Manage() {
             >
               Abbrechen
             </button>
-            <button>Speichern</button>
+            <button type="submit">Speichern</button>
           </footer>
         </form>
       </dialog>
