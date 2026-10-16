@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export function ScoreboardPreview() {
+export function ScoreboardPreview({ children }: { children?: ReactNode }) {
   const frame = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
 
@@ -25,6 +25,7 @@ export function ScoreboardPreview() {
           style={{ transform: `scale(${width / 1280})` }}
         />
       )}
+      {children}
     </div>
   );
 }

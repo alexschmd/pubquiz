@@ -1,3 +1,10 @@
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./ui/tooltip";
+import type { ReactNode } from "react";
 import { ScoreboardPreview } from "./ScoreboardPreview";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { QuestionFormEditor } from "./QuestionFormEditor";
@@ -23,6 +30,9 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Monitor,
+  MessageSquare,
+  Square,
 } from "lucide-react";
 import {
   Empty,
@@ -187,55 +197,60 @@ export function QuestionComposer() {
         )}
       </div>
       <section className="question-session" aria-label="Laufende Frage">
-        <ScoreboardPreview />
-        <div className="question-timer-controls">
-          <Button
-            variant="outline"
-            disabled={!question || remaining === 0}
-            onClick={toggleTimer}
-            size="icon"
-            aria-label={
-              question?.pausedRemainingMs !== undefined
-                ? "Zeit fortsetzen"
-                : "Zeit stoppen"
-            }
-            title={
-              question?.pausedRemainingMs !== undefined
-                ? "Zeit fortsetzen"
-                : "Zeit stoppen"
-            }
-          >
-            {question?.pausedRemainingMs !== undefined ? (
-              <Play data-icon="inline-start" />
-            ) : (
-              <Pause data-icon="inline-start" />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Zeit neu starten"
-            title="Zeit neu starten"
-            disabled={!question}
-            onClick={restartTimer}
-          >
-            <RotateCcw data-icon="inline-start" />
-          </Button>
-        </div>
-        <div className="question-screen-switch">
-          <Button
-            variant="outline"
-            disabled={!question}
-            onClick={() => setQuestionVisible(question?.visible === false)}
-          >
-            {!question || question.visible === false
-              ? "Zur Frage wechseln"
-              : "Zum Scoreboard wechseln"}
-          </Button>
-          <Button variant="ghost" disabled={!question} onClick={dismiss}>
-            Frage beenden
-          </Button>
-        </div>
+        <ScoreboardPreview>
+          <TooltipProvider delay={200}>
+            <div
+              className="preview-controls"
+              role="group"
+              aria-label="Vorschau steuern"
+            >
+              <PreviewControl
+                label={
+                  question?.pausedRemainingMs !== undefined
+                    ? "Zeit fortsetzen"
+                    : "Zeit stoppen"
+                }
+                disabled={!question || remaining === 0}
+                onClick={toggleTimer}
+              >
+                {question?.pausedRemainingMs !== undefined ? (
+                  <Play />
+                ) : (
+                  <Pause />
+                )}
+              </PreviewControl>
+              <PreviewControl
+                label="Zeit neu starten"
+                disabled={!question}
+                onClick={restartTimer}
+              >
+                <RotateCcw />
+              </PreviewControl>
+              <PreviewControl
+                label={
+                  !question || question.visible === false
+                    ? "Zur Frage wechseln"
+                    : "Zum Scoreboard wechseln"
+                }
+                disabled={!question}
+                onClick={() => setQuestionVisible(question?.visible === false)}
+              >
+                {!question || question.visible === false ? (
+                  <MessageSquare />
+                ) : (
+                  <Monitor />
+                )}
+              </PreviewControl>
+              <PreviewControl
+                label="Frage beenden"
+                disabled={!question}
+                onClick={dismiss}
+              >
+                <Square />
+              </PreviewControl>
+            </div>
+          </TooltipProvider>
+        </ScoreboardPreview>
       </section>
       {!!questions.length ? (
         <div className="question-compact-selection">
@@ -591,5 +606,42 @@ export function QuestionComposer() {
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+function PreviewControl({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            className="preview-control-trigger"
+            tabIndex={disabled ? 0 : undefined}
+            aria-label={disabled ? label : undefined}
+          />
+        }
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

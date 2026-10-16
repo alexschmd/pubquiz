@@ -1412,3 +1412,18 @@ h1 {
 .question-sequence { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .question-sequence > [data-slot="select-trigger"] { flex: 1; min-width: 0; }
 .question-sequence > button[data-slot="button"] { flex-shrink: 0; }
+.preview-controls {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px #0003;
+}
+.preview-control-trigger { display: inline-flex; border-radius: 6px; }
+.preview-control-trigger:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
