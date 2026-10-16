@@ -1426,3 +1426,11 @@ h1 {
 .preview-control-trigger { display: inline-flex; border-radius: 6px; }
 .preview-control-trigger:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .question-session > .question-list-heading { margin-bottom: 0; }
+
+.management-tile .tile-controls {
+  --border: color-mix(in srgb, var(--team-color) 65%, var(--foreground) 35%);
+  --input: color-mix(in srgb, var(--team-color) 65%, var(--foreground) 35%);
+  --background: color-mix(in srgb, var(--team-color) 8%, #101116);
+  --muted: color-mix(in srgb, var(--team-color) 32%, #101116);
+  --ring: color-mix(in srgb, var(--team-color) 65%, var(--foreground) 35%);
+}

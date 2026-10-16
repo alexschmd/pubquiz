@@ -39,6 +39,7 @@ function tileStyle(color: string): CSSProperties {
   const ink = "#eeeeef";
   const surface = `color-mix(in srgb, ${color} 16%, #101116)`;
   return {
+    "--team-color": color,
     "--background": surface,
     "--foreground": ink,
     "--muted": `color-mix(in srgb, ${color} 24%, #101116)`,
