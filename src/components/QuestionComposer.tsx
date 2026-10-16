@@ -1,3 +1,5 @@
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import { QuestionFormEditor } from "./QuestionFormEditor";
 import { ButtonGroup, ButtonGroupText } from "./ui/button-group";
 import {
   Select,
@@ -49,7 +51,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "./ui/dialog";
-import { parseQuestionList } from "../lib/questions";
+import {
+  parseQuestionList,
+  validateQuestions,
+  serializeQuestions,
+  type PreparedQuestion,
+} from "../lib/questions";
 import {
   useQuestion,
   useRemainingSeconds,
@@ -70,7 +77,9 @@ export function QuestionComposer() {
     setCorrectOptions,
     revealSolution,
   } = useQuestion();
-  const [text, setText] = useState("");
+  const [questions, setQuestions] = useState<PreparedQuestion[]>([]);
+  const [editorMode, setEditorMode] = useState("text");
+  const [formDraft, setFormDraft] = useState<PreparedQuestion[]>([]);
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -89,14 +98,13 @@ export function QuestionComposer() {
       const raw = localStorage.getItem(BANK_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
-        if (
-          typeof saved.text !== "string" ||
-          !saved.durations ||
-          typeof saved.durations !== "object"
-        )
+        if (!saved.durations || typeof saved.durations !== "object")
           throw new Error();
-        parseQuestionList(saved.text);
-        setText(saved.text);
+        setQuestions(
+          saved.version === 2
+            ? validateQuestions(saved.questions)
+            : parseQuestionList(saved.text),
+        );
         setDurations(saved.durations);
       }
     } catch {
@@ -104,7 +112,6 @@ export function QuestionComposer() {
     }
     setBankReady(true);
   }, []);
-  const questions = parseQuestionList(text);
   const chosen = questions[selected];
   const remaining = useRemainingSeconds(question);
   const selectedIsActive =
@@ -128,23 +135,28 @@ export function QuestionComposer() {
     const correct = current.includes(index)
       ? current.filter((item) => item !== index)
       : [...current, index];
-    const nextText = questions
-      .map((item) => {
-        const answer =
-          item.number === chosen.number ? correct : (item.correctOptions ?? []);
-        return `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, i) => `(${option}${answer.includes(i) ? "*" : ""})`).join(" ")}` : ""}`;
-      })
-      .join("\n");
-    if (saveBank(nextText, durations) && selectedIsActive)
+    const nextQuestions = questions.map((item) =>
+      item.number === chosen.number
+        ? { ...item, correctOptions: correct }
+        : item,
+    );
+    if (saveBank(nextQuestions, durations) && selectedIsActive)
       setCorrectOptions(correct);
   }
-  function saveBank(nextText: string, nextDurations: Record<number, string>) {
+  function saveBank(
+    nextQuestions: PreparedQuestion[],
+    nextDurations: Record<number, string>,
+  ) {
     try {
       localStorage.setItem(
         BANK_KEY,
-        JSON.stringify({ text: nextText, durations: nextDurations }),
+        JSON.stringify({
+          version: 2,
+          questions: nextQuestions,
+          durations: nextDurations,
+        }),
       );
-      setText(nextText);
+      setQuestions(nextQuestions);
       setDurations(nextDurations);
       setBankError("");
       return true;
@@ -155,7 +167,13 @@ export function QuestionComposer() {
   }
   function edit() {
     setCopyState("idle");
-    setDraft(text);
+    setFormDraft(structuredClone(questions));
+    try {
+      setDraft(serializeQuestions(questions));
+      setEditorMode("text");
+    } catch {
+      setEditorMode("form");
+    }
     setDraftError("");
     setOpen(true);
   }
@@ -211,7 +229,7 @@ export function QuestionComposer() {
                 step={1}
                 value={durations[chosen.number] ?? "60"}
                 onChange={(event) =>
-                  saveBank(text, {
+                  saveBank(questions, {
                     ...durations,
                     [chosen.number]: event.target.value,
                   })
@@ -396,11 +414,12 @@ export function QuestionComposer() {
         </Alert>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Fragen bearbeiten</DialogTitle>
             <DialogDescription>
-              Eine Frage pro Zeile. Nummern und Antworten sind optional.
+              Fragen importieren oder einzeln bearbeiten und richtige Antworten
+              markieren.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -408,8 +427,11 @@ export function QuestionComposer() {
             onSubmit={(event) => {
               event.preventDefault();
               try {
-                parseQuestionList(draft);
-                if (saveBank(draft, durations)) {
+                const next =
+                  editorMode === "text"
+                    ? parseQuestionList(draft)
+                    : validateQuestions(formDraft);
+                if (saveBank(next, durations)) {
                   setSelected(0);
                   setOpen(false);
                 }
@@ -418,73 +440,103 @@ export function QuestionComposer() {
               }
             }}
           >
-            <Field data-invalid={!!draftError}>
-              <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
-              <InputGroup>
-                <InputGroupTextarea
-                  id="quiz-question"
-                  maxLength={50000}
-                  rows={10}
-                  className="question-list-input"
-                  aria-invalid={!!draftError}
-                  aria-describedby="question-list-help"
-                  placeholder={
-                    "1. Welcher Planet?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
-                  }
-                  value={draft}
-                  onChange={(event) => {
-                    setDraft(event.target.value);
+            <Tabs
+              value={editorMode}
+              onValueChange={(value) => {
+                try {
+                  if (value === "form") setFormDraft(parseQuestionList(draft));
+                  else setDraft(serializeQuestions(formDraft));
+                  setEditorMode(String(value));
+                  setDraftError("");
+                } catch (error) {
+                  setDraftError((error as Error).message);
+                }
+              }}
+            >
+              <TabsList>
+                <TabsTrigger value="text">Textimport</TabsTrigger>
+                <TabsTrigger value="form">Bearbeiten</TabsTrigger>
+              </TabsList>
+              <TabsContent value="text">
+                <Field data-invalid={!!draftError}>
+                  <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
+                  <InputGroup>
+                    <InputGroupTextarea
+                      id="quiz-question"
+                      maxLength={50000}
+                      rows={10}
+                      className="question-list-input"
+                      aria-invalid={!!draftError}
+                      aria-describedby="question-list-help"
+                      placeholder={
+                        "1. Welcher Planet?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
+                      }
+                      value={draft}
+                      onChange={(event) => {
+                        setDraft(event.target.value);
+                        setDraftError("");
+                      }}
+                    />
+                    <InputGroupAddon align="block-end" className="justify-end">
+                      <InputGroupButton
+                        type="button"
+                        variant="ghost"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(
+                              QUESTION_IMPORT_PROMPT,
+                            );
+                            setCopyState("copied");
+                          } catch {
+                            setCopyState("failed");
+                          }
+                        }}
+                      >
+                        {copyState === "copied" ? (
+                          <Check data-icon="inline-start" />
+                        ) : (
+                          <Copy data-icon="inline-start" />
+                        )}
+                        {copyState === "copied"
+                          ? "Prompt kopiert"
+                          : "Prompt kopieren"}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <p className="question-copy-status" role="status">
+                    {copyState === "failed"
+                      ? "Kopieren nicht möglich. Den Prompt unten manuell kopieren."
+                      : copyState === "copied"
+                        ? "Prompt kopiert. Zusammen mit dem Fragendokument einer KI geben und das Ergebnis hier einfügen."
+                        : "Mit dem Prompt kannst du ein Fragendokument von einer KI ins passende Format bringen lassen."}
+                  </p>
+                  {copyState === "failed" && (
+                    <Textarea
+                      readOnly
+                      aria-label="Prompt zum manuellen Kopieren"
+                      value={QUESTION_IMPORT_PROMPT}
+                      className="question-prompt-fallback"
+                      onFocus={(event) => event.target.select()}
+                    />
+                  )}
+                  <FieldDescription id="question-list-help">
+                    Beispiel: 1. Frage; (Antwort A*) (Antwort B). Ein * am Ende
+                    markiert richtige Antworten. Mehrere sind möglich.
+                    Leerzeilen werden übersprungen. Ohne Nummer wird automatisch
+                    durchnummeriert.
+                  </FieldDescription>
+                </Field>
+              </TabsContent>
+              <TabsContent value="form">
+                <QuestionFormEditor
+                  questions={formDraft}
+                  onChange={(items) => {
+                    setFormDraft(items);
                     setDraftError("");
                   }}
                 />
-                <InputGroupAddon align="block-end" className="justify-end">
-                  <InputGroupButton
-                    type="button"
-                    variant="ghost"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(
-                          QUESTION_IMPORT_PROMPT,
-                        );
-                        setCopyState("copied");
-                      } catch {
-                        setCopyState("failed");
-                      }
-                    }}
-                  >
-                    {copyState === "copied" ? (
-                      <Check data-icon="inline-start" />
-                    ) : (
-                      <Copy data-icon="inline-start" />
-                    )}
-                    {copyState === "copied"
-                      ? "Prompt kopiert"
-                      : "Prompt kopieren"}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-              <p className="question-copy-status" role="status">
-                {copyState === "failed"
-                  ? "Kopieren nicht möglich. Den Prompt unten manuell kopieren."
-                  : copyState === "copied"
-                    ? "Prompt kopiert. Zusammen mit dem Fragendokument einer KI geben und das Ergebnis hier einfügen."
-                    : "Mit dem Prompt kannst du ein Fragendokument von einer KI ins passende Format bringen lassen."}
-              </p>
-              {copyState === "failed" && (
-                <Textarea
-                  readOnly
-                  aria-label="Prompt zum manuellen Kopieren"
-                  value={QUESTION_IMPORT_PROMPT}
-                  className="question-prompt-fallback"
-                  onFocus={(event) => event.target.select()}
-                />
-              )}
-              <FieldDescription id="question-list-help">
-                Beispiel: 1. Frage; (Antwort A*) (Antwort B). Ein * am Ende
-                markiert die richtige Antwort. Leerzeilen werden übersprungen.
-                Ohne Nummer wird automatisch durchnummeriert.
-              </FieldDescription>
-            </Field>
+              </TabsContent>
+            </Tabs>
             {draftError && (
               <p role="alert" className="question-form-error">
                 {draftError}

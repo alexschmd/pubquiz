@@ -53,3 +53,65 @@ export function parseQuestionList(source: string): PreparedQuestion[] {
       };
     });
 }
+
+export function validateQuestions(value: unknown): PreparedQuestion[] {
+  if (!Array.isArray(value)) throw new Error("Ungültige Fragenliste.");
+  const used = new Set<number>();
+  return value.map((item) => {
+    if (
+      !item ||
+      !Number.isSafeInteger(item.number) ||
+      item.number < 1 ||
+      used.has(item.number) ||
+      typeof item.text !== "string" ||
+      !item.text.trim() ||
+      item.text.length > 1000 ||
+      !Array.isArray(item.options) ||
+      item.options.length > 8 ||
+      item.options.some(
+        (option: unknown) =>
+          typeof option !== "string" || !option.trim() || option.length > 300,
+      ) ||
+      (item.correctOptions !== undefined &&
+        (!Array.isArray(item.correctOptions) ||
+          item.correctOptions.some(
+            (index: unknown) =>
+              !Number.isInteger(index) ||
+              Number(index) < 0 ||
+              Number(index) >= item.options.length,
+          )))
+    )
+      throw new Error(
+        "Bitte alle Fragen und Antworten ausfüllen (max. 1000 Zeichen je Frage, 300 je Antwort und acht Antworten).",
+      );
+    used.add(item.number);
+    return {
+      number: item.number,
+      text: item.text.trim(),
+      options: item.options.map((option: string) => option.trim()),
+      ...(item.correctOptions?.length
+        ? { correctOptions: [...new Set<number>(item.correctOptions)] }
+        : {}),
+    };
+  });
+}
+export function serializeQuestions(questions: PreparedQuestion[]): string {
+  if (
+    questions.some(
+      (item) =>
+        /[;\r\n]/.test(item.text) ||
+        item.options.some(
+          (option) => /[()\r\n]/.test(option) || option.endsWith("*"),
+        ),
+    )
+  )
+    throw new Error(
+      "Diese Inhalte enthalten Sonderzeichen des Textformats. Bitte im Editor weiterbearbeiten.",
+    );
+  return questions
+    .map(
+      (item) =>
+        `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, index) => `(${option}${item.correctOptions?.includes(index) ? "*" : ""})`).join(" ")}` : ""}`,
+    )
+    .join("\n");
+}

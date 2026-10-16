@@ -28,7 +28,8 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.click(screen.getByRole("button", { name: "Fragen speichern" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBe(null));
   expect(
-    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).text,
+    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).questions[0]
+      .text,
   ).toContain("Erste Frage");
   fireEvent.change(screen.getByLabelText("Zeit für Frage 4"), {
     target: { value: "30" },
@@ -94,8 +95,9 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(marked.correctOptions).toEqual([1]);
   expect(marked.solutionRevealed).toBe(false);
   expect(
-    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).text,
-  ).toContain("(B*)");
+    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).questions[0]
+      .correctOptions,
+  ).toEqual([1]);
   fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Antwort A als richtig markieren" }),
@@ -137,4 +139,37 @@ test("copies an import prompt from the questions dialog", async () => {
     if (original) Object.defineProperty(navigator, "clipboard", original);
     else Reflect.deleteProperty(navigator, "clipboard");
   }
+});
+
+test("edits imported questions and multiple correct answers in form fields", async () => {
+  localStorage.setItem(
+    "pubquiz-question-bank",
+    JSON.stringify({ text: "1. Gerade Zahlen?; (2) (3) (4)", durations: {} }),
+  );
+  render(
+    <QuestionProvider>
+      <QuestionComposer />
+    </QuestionProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Fragen bearbeiten" }));
+  fireEvent.click(await screen.findByRole("tab", { name: "Bearbeiten" }));
+  fireEvent.change(await screen.findByLabelText("Fragetext"), {
+    target: { value: "Welche Zahlen sind gerade?" },
+  });
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "Frage 1, Antwort A richtig" }),
+  );
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "Frage 1, Antwort C richtig" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Fragen speichern" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBe(null));
+  const saved = JSON.parse(localStorage.getItem("pubquiz-question-bank")!);
+  expect(saved.version).toBe(2);
+  expect(saved.questions[0].text).toBe("Welche Zahlen sind gerade?");
+  expect(saved.questions[0].correctOptions).toEqual([0, 2]);
+  fireEvent.click(screen.getByRole("button", { name: "Fragen bearbeiten" }));
+  expect(
+    ((await screen.findByLabelText("Fragen")) as HTMLTextAreaElement).value,
+  ).toContain("(2*) (3) (4*)");
 });

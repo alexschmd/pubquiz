@@ -41,16 +41,16 @@ Die Tests prüfen Datenübernahme, Speicherung, Tab-Synchronisierung, beschädig
 
 ## Fragen und Countdown
 
-Unter `/manage` öffnet „Fragen hinzufügen“ bzw. „Fragen bearbeiten“ einen Dialog mit shadcn-Textarea. Dort mehrere Fragen vorbereiten, eine pro Zeile, und speichern. Leerzeilen werden ignoriert. Fragen können explizit nummeriert werden; sonst werden sie automatisch durchnummeriert.
+Unter `/manage` öffnet „Fragen hinzufügen“ bzw. „Fragen bearbeiten“ einen Dialog mit zwei Ansichten. „Textimport“ bietet eine shadcn-Textarea für mehrere Fragen, eine pro Zeile. Unter „Bearbeiten“ lassen sich Fragen und Antworten einzeln hinzufügen, ändern oder löschen und mehrere richtige Antworten per Checkbox markieren. Beide Ansichten übernehmen die Änderungen beim Wechsel. Leerzeilen werden ignoriert. Fragen können explizit nummeriert werden; sonst werden sie automatisch durchnummeriert.
 
 ```text
 1. Welcher Planet ist der Sonne am nächsten?; (Merkur) (Venus) (Erde) (Mars)
 2. Wer schrieb Faust?
 ```
 
-In der Übersicht eine Frage anklicken, ihre Dauer von 1 bis 3600 Sekunden direkt daneben einstellen und „Frage starten“ wählen. Die Vorschau entfällt. Start- und Ansichtsknöpfe bleiben immer sichtbar. Fragenliste und Zeiten bleiben nach dem Neuladen gespeichert.
+In der Übersicht eine Frage im Select auswählen, ihre Dauer von 1 bis 3600 Sekunden direkt daneben einstellen und „Frage starten“ wählen. Die Vorschau entfällt. Start- und Ansichtsknöpfe bleiben immer sichtbar. Fragenliste und Zeiten bleiben nach dem Neuladen gespeichert.
 
-Das Scoreboard zeigt „Frage X“, den Fragetext, optionale Antworten und den Countdown. Die letzten zehn Sekunden pulsieren synchron zu den Sekundenwechseln rot; bei reduzierter Bewegung bleibt der Timer statisch rot. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ sichtbar. Antworten sind zunächst nur Anzeige, ohne Lösungsauswahl oder automatische Wertung. Sound ist für eine spätere Erweiterung vorgesehen.
+Das Scoreboard zeigt „Frage X“, den Fragetext, optionale Antworten und den Countdown. Die letzten zehn Sekunden pulsieren synchron zu den Sekundenwechseln rot; bei reduzierter Bewegung bleibt der Timer statisch rot. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ sichtbar. Die Lösung bleibt bis zum Aufdecken verborgen; eine automatische Wertung erfolgt nicht. Sound ist für eine spätere Erweiterung vorgesehen.
 
 „Scoreboard anzeigen“ und „Frage anzeigen“ wechseln die Ansicht, ohne die Zeit zurückzusetzen. „Frage beenden“ entfernt die aktive Frage. Endzeitpunkt, aktive Frage und Ansicht werden gespeichert und zwischen Tabs derselben Origin synchronisiert. Die vorbereitete Fragenliste und ihre Zeiten bleiben ebenfalls gespeichert.
 
@@ -61,3 +61,5 @@ Antwortfreigaben lassen sich bereits für die ausgewählte Frage vorbereiten. Be
 „Zeit stoppen“ hält den Countdown mit seiner genauen Restzeit an und wird zu „Zeit fortsetzen“. „Zeit neu starten“ setzt die laufende Frage auf ihre beim Start gewählte Dauer zurück. Pausen bleiben auch beim Neuladen und Wechseln der Ansicht erhalten.
 
 Die richtigen Antworten werden in der Verwaltung per Haken am Ende einer Antwortgruppe markiert oder direkt importiert: `1. Planet?; (Merkur*) (Venus)`. Mehrere Antworten dürfen mit `*` markiert werden. Der KI-Importprompt berücksichtigt diese Markierung, sofern die Lösung im Dokument angegeben ist. Die Markierung ist auf dem Scoreboard zunächst verborgen. „Lösung aufdecken“ zeigt alle Antworten, hebt alle richtigen grün hervor und dimmt die übrigen; „Lösung verbergen“ entfernt die Hervorhebung. Das Aufdecken verändert die Countdown-Zeit nicht.
+
+Fragen werden intern strukturiert gespeichert. Ältere gespeicherte Textlisten werden weiterhin übernommen. Der Textimport bleibt im bisherigen Format; ein JSON-Import ist nicht erforderlich. Inhalte mit Sonderzeichen des Importformats können im Editor bearbeitet und gespeichert werden.
