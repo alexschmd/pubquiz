@@ -12,3 +12,13 @@ test("rejects duplicate numbers and malformed answer syntax", () => {
   for (const text of ["1. A\n1. B", "A; Antwort", "A; ()", "A; (offen"])
     expect(() => parseQuestionList(text)).toThrow();
 });
+
+test("extracts the correct-answer marker without displaying it", () => {
+  expect(parseQuestionList("1. Planet?; (Merkur*) (Venus)")[0]).toEqual({
+    number: 1,
+    text: "Planet?",
+    options: ["Merkur", "Venus"],
+    correctOption: 0,
+  });
+  expect(() => parseQuestionList("1. Planet?; (Merkur*) (Venus*)")).toThrow();
+});

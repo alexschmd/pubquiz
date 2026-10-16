@@ -59,3 +59,5 @@ Antwortmöglichkeiten sind nach dem Start verborgen. Unter der Fragensteuerung k
 Antwortfreigaben lassen sich bereits für die ausgewählte Frage vorbereiten. Beim Start werden sie übernommen. Die schmalen Augen-Schalter in den shadcn Button Groups steuern die Sichtbarkeit. Für die laufende Frage wirken Änderungen sofort.
 
 „Zeit stoppen“ hält den Countdown mit seiner genauen Restzeit an und wird zu „Zeit fortsetzen“. „Zeit neu starten“ setzt die laufende Frage auf ihre beim Start gewählte Dauer zurück. Pausen bleiben auch beim Neuladen und Wechseln der Ansicht erhalten.
+
+Die richtige Antwort wird in der Verwaltung per Haken am Ende einer Antwortgruppe markiert oder direkt importiert: `1. Planet?; (Merkur*) (Venus)`. Höchstens eine Antwort darf ein `*` tragen. Der KI-Importprompt berücksichtigt diese Markierung, sofern die Lösung im Dokument angegeben ist. Die Markierung ist auf dem Scoreboard zunächst verborgen. „Lösung aufdecken“ zeigt alle Antworten, hebt die richtige grün hervor und dimmt die übrigen; „Lösung verbergen“ entfernt die Hervorhebung. Das Aufdecken verändert die Countdown-Zeit nicht.

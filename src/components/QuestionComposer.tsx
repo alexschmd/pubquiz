@@ -67,6 +67,8 @@ export function QuestionComposer() {
     revealOptions,
     toggleTimer,
     restartTimer,
+    setCorrectOption,
+    revealSolution,
   } = useQuestion();
   const [text, setText] = useState("");
   const [draft, setDraft] = useState("");
@@ -119,6 +121,19 @@ export function QuestionComposer() {
     if (!chosen) return;
     setPreparedReveals((current) => ({ ...current, [chosen.number]: indices }));
     if (selectedIsActive) revealOptions(indices);
+  }
+  function markCorrect(index: number) {
+    if (!chosen) return;
+    const correct = chosen.correctOption === index ? undefined : index;
+    const nextText = questions
+      .map((item) => {
+        const answer =
+          item.number === chosen.number ? correct : item.correctOption;
+        return `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, i) => `(${option}${i === answer ? "*" : ""})`).join(" ")}` : ""}`;
+      })
+      .join("\n");
+    if (saveBank(nextText, durations) && selectedIsActive)
+      setCorrectOption(correct);
   }
   function saveBank(nextText: string, nextDurations: Record<number, string>) {
     try {
@@ -233,6 +248,9 @@ export function QuestionComposer() {
                 publish(chosen.text, Number(durations[chosen.number] ?? 60), {
                   number: chosen.number,
                   options: chosen.options,
+                  ...(chosen.correctOption !== undefined
+                    ? { correctOption: chosen.correctOption }
+                    : {}),
                   revealedOptions: visibleAnswers,
                 });
             }}
@@ -277,6 +295,18 @@ export function QuestionComposer() {
                   <ButtonGroupText className="answer-segment-text">
                     {option}
                   </ButtonGroupText>
+                  <Button
+                    variant={
+                      chosen.correctOption === index ? "secondary" : "outline"
+                    }
+                    size="icon"
+                    aria-pressed={chosen.correctOption === index}
+                    aria-label={`Antwort ${label} ${chosen.correctOption === index ? "nicht mehr als richtig markieren" : "als richtig markieren"}`}
+                    title="Richtige Antwort markieren"
+                    onClick={() => markCorrect(index)}
+                  >
+                    <Check />
+                  </Button>
                 </ButtonGroup>
               );
             })}
@@ -292,6 +322,25 @@ export function QuestionComposer() {
               Alle verbergen
             </Button>
           </div>
+        </div>
+      )}
+      {!!chosen?.options.length && (
+        <div className="solution-control">
+          <p>
+            Mit dem Haken die richtige Antwort markieren. Sie bleibt bis zum
+            Aufdecken verborgen.
+          </p>
+          <Button
+            variant="outline"
+            disabled={
+              !selectedIsActive || question?.correctOption === undefined
+            }
+            onClick={() => revealSolution(!question?.solutionRevealed)}
+          >
+            {question?.solutionRevealed && selectedIsActive
+              ? "Lösung verbergen"
+              : "Lösung aufdecken"}
+          </Button>
         </div>
       )}
       <div className="question-timer-controls">
@@ -423,8 +472,9 @@ export function QuestionComposer() {
                 />
               )}
               <FieldDescription id="question-list-help">
-                Beispiel: 1. Frage; (Antwort A) (Antwort B). Leerzeilen werden
-                übersprungen. Ohne Nummer wird automatisch durchnummeriert.
+                Beispiel: 1. Frage; (Antwort A*) (Antwort B). Ein * am Ende
+                markiert die richtige Antwort. Leerzeilen werden übersprungen.
+                Ohne Nummer wird automatisch durchnummeriert.
               </FieldDescription>
             </Field>
             {draftError && (

@@ -37,6 +37,13 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
             {shown.map((option) => (
               <m.li
                 layout
+                data-solution={
+                  question.solutionRevealed
+                    ? question.correctOption === option.index
+                      ? "correct"
+                      : "incorrect"
+                    : undefined
+                }
                 key={option.index}
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -45,6 +52,15 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
               >
                 <span>{String.fromCharCode(65 + option.index)}</span>
                 {option.text}
+                {question.solutionRevealed &&
+                  question.correctOption === option.index && (
+                    <span
+                      className="solution-check"
+                      aria-label="Richtige Antwort"
+                    >
+                      ✓
+                    </span>
+                  )}
               </m.li>
             ))}
           </m.ol>
