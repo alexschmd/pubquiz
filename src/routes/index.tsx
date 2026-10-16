@@ -5,7 +5,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { LazyMotion, domMax, m, MotionConfig, LayoutGroup } from "motion/react";
 import { useTeams } from "../context/TeamsContext";
 import { teamRows } from "../lib/teams";
-export const Route = createFileRoute("/")({ component: Scoreboard });
+export const Route = createFileRoute("/")({
+  component: Scoreboard,
+  head: () => ({ meta: [{ title: "Scoreboard | Pubquiz" }] }),
+});
 function Scoreboard() {
   const { teams, ready, error } = useTeams();
   if (!ready)

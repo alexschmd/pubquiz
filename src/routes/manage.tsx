@@ -29,7 +29,10 @@ import {
 } from "../components/ui/empty";
 import { useTeams } from "../context/TeamsContext";
 import { createTeam, MAX_TEAMS, type Team } from "../lib/teams";
-export const Route = createFileRoute("/manage")({ component: Manage });
+export const Route = createFileRoute("/manage")({
+  component: Manage,
+  head: () => ({ meta: [{ title: "Punktestand | Pubquiz" }] }),
+});
 
 function tileStyle(color: string): CSSProperties {
   const ink = "#eeeeef";
