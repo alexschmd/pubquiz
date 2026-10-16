@@ -204,16 +204,6 @@ export function QuestionComposer() {
   }
   return (
     <section className="question-composer" aria-labelledby="question-title">
-      <div className="question-list-heading">
-        <h2 id="question-title">
-          Fragen <span>{questions.length}</span>
-        </h2>
-        {!!questions.length && (
-          <Button disabled={!bankReady} onClick={edit}>
-            Fragen bearbeiten
-          </Button>
-        )}
-      </div>
       <section className="question-session" aria-label="Laufende Frage">
         <ScoreboardPreview>
           <TooltipProvider delay={200}>
@@ -271,6 +261,16 @@ export function QuestionComposer() {
           </TooltipProvider>
         </ScoreboardPreview>
       </section>
+      <div className="question-list-heading">
+        <h2 id="question-title">
+          Fragen <span>{questions.length}</span>
+        </h2>
+        {!!questions.length && (
+          <Button disabled={!bankReady} onClick={edit}>
+            Fragen bearbeiten
+          </Button>
+        )}
+      </div>
       {!!questions.length ? (
         <div className="question-compact-selection">
           <Field>
