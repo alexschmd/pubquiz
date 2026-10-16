@@ -90,7 +90,10 @@ function Scoreboard() {
                                 className="score"
                                 style={
                                   {
-                                    "--score-digits": String(team.score).length,
+                                    "--score-digits": Math.max(
+                                      2,
+                                      String(team.score).length,
+                                    ),
                                   } as CSSProperties
                                 }
                               >
