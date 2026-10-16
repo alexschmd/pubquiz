@@ -204,7 +204,10 @@ export function QuestionComposer() {
   }
   return (
     <section className="question-composer" aria-labelledby="question-title">
-      <section className="question-session" aria-label="Laufende Frage">
+      <section className="question-session" aria-labelledby="preview-title">
+        <div className="question-list-heading">
+          <h2 id="preview-title">Vorschau</h2>
+        </div>
         <ScoreboardPreview>
           <TooltipProvider delay={200}>
             <div
