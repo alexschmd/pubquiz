@@ -1,3 +1,4 @@
+import { QuestionComposer } from "../components/QuestionComposer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type CSSProperties } from "react";
 import {
@@ -91,6 +92,7 @@ function Manage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      <QuestionComposer />
       <section className="team-sheet" aria-label="Teamverwaltung">
         <div className="sheet-heading">
           <div>

@@ -1,3 +1,4 @@
+import { QuestionProvider } from "../context/QuestionContext";
 import {
   createRootRoute,
   HeadContent,
@@ -32,7 +33,9 @@ function Root() {
       </head>
       <body>
         <TeamsProvider>
-          <Outlet />
+          <QuestionProvider>
+            <Outlet />
+          </QuestionProvider>
         </TeamsProvider>
         <Scripts />
       </body>

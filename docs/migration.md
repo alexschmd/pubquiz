@@ -36,3 +36,9 @@ Browser checks covered 9 → 10, 10 → 0, 0 → -1, -1 → 100 and 100 → 99. 
 Installed official shadcn/ui (Base UI / Nova), Tailwind v4, and focused Button, Dialog, Input, Field, Table, Alert and Empty components. Replaced gradient management cards with a compact team table and stable score controls. The editor uses a controlled accessible dialog, labeled inputs, and a scrollable team list. Styling is neutral; team colors are small markers. Mobile layout prioritizes names and score controls.
 
 Browser smoke checks verified adding/saving a team and persisting score changes, plus desktop/mobile layouts and dialog display. Typecheck, four regression tests and production build pass. React Doctor remains at 77/100 with the existing two reviewed warnings. CLI-generated utility imports were corrected to the local `cn` helper.
+
+## Live questions
+
+Added a question composer and adjustable 1–3600 second countdown. Publishing replaces the scoreboard with the question and timer; expiration keeps the question visible until dismissed by the host. A persisted absolute deadline keeps reloads and browser tabs aligned. Existing team data is independent.
+
+Seven regression tests pass, including deadline persistence, countdown expiration, restoration and storage-event synchronization. Browser verification used separate management and scoreboard tabs and confirmed question display and remote dismissal. React Doctor currently reports 72/100: the two existing application findings plus two findings in generated shadcn Button/Field source (exported variants and error-list keys); no question-component findings.

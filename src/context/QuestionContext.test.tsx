@@ -1,0 +1,87 @@
+import { afterEach, expect, test, vi } from "vitest";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
+import {
+  QuestionProvider,
+  useQuestion,
+  useRemainingSeconds,
+  QUESTION_KEY,
+  parseQuestion,
+} from "./QuestionContext";
+function Probe() {
+  const { question, publish, dismiss } = useQuestion();
+  const remaining = useRemainingSeconds(question);
+  return (
+    <>
+      <span>{question?.text ?? "keine Frage"}</span>
+      <output>{remaining}</output>
+      <button onClick={() => publish("Welche Stadt?", 3)}>Start</button>
+      <button onClick={dismiss}>Ende</button>
+    </>
+  );
+}
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+  vi.useRealTimers();
+});
+test("publishes an absolute deadline, expires at zero and dismisses", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100000);
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  fireEvent.click(screen.getByText("Start"));
+  expect(parseQuestion(localStorage.getItem(QUESTION_KEY))).toEqual({
+    text: "Welche Stadt?",
+    endsAt: 103000,
+  });
+  expect(screen.getByRole("status").textContent).toBe("3");
+  act(() => vi.advanceTimersByTime(5000));
+  expect(screen.getByRole("status").textContent).toBe("0");
+  expect(screen.getByText("Welche Stadt?")).toBeTruthy();
+  fireEvent.click(screen.getByText("Ende"));
+  expect(screen.getByText("keine Frage")).toBeTruthy();
+  expect(parseQuestion(localStorage.getItem(QUESTION_KEY))).toBe(null);
+});
+test("restores remaining time rather than restarting and receives tab changes", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100000);
+  localStorage.setItem(
+    QUESTION_KEY,
+    JSON.stringify({ text: "Bestandsfrage", endsAt: 102000 }),
+  );
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  expect(screen.getByRole("status").textContent).toBe("2");
+  act(() =>
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: QUESTION_KEY,
+        newValue: JSON.stringify({ text: "Andere Frage", endsAt: 104000 }),
+      }),
+    ),
+  );
+  expect(screen.getByText("Andere Frage")).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toBe("4");
+  act(() =>
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: QUESTION_KEY, newValue: "null" }),
+    ),
+  );
+  expect(screen.getByText("keine Frage")).toBeTruthy();
+});
+test("rejects malformed saved questions", () => {
+  expect(() => parseQuestion('{"text":"x","endsAt":"invalid"}')).toThrow();
+  expect(parseQuestion("null")).toBe(null);
+});

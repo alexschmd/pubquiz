@@ -38,3 +38,7 @@ npm run build
 ```
 
 Die Tests prüfen Datenübernahme, Speicherung, Tab-Synchronisierung, beschädigte Bestandsdaten und Rasteraufteilung für ein bis zehn Teams.
+
+## Fragen und Countdown
+
+Unter `/manage` eine Frage und eine Dauer von 1 bis 3600 Sekunden eingeben und „Auf Scoreboard anzeigen“ wählen. Das Scoreboard zeigt dann die Frage mit Countdown statt der Teamkacheln. Nach Ablauf bleibt die Frage mit „Zeit abgelaufen“ stehen. „Frage beenden“ bringt die Punkteanzeige zurück. Der gespeicherte Endzeitpunkt übersteht Neuladen; die Synchronisierung gilt für Tabs desselben Browsers und derselben Origin.

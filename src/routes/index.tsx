@@ -1,3 +1,5 @@
+import { useQuestion } from "../context/QuestionContext";
+import { QuestionDisplay } from "../components/QuestionDisplay";
 import { SlidingNumber } from "../components/SlidingNumber";
 import { RevealFx } from "../components/RevealFx";
 import { TeamBackground } from "../components/TeamBackground";
@@ -11,7 +13,8 @@ export const Route = createFileRoute("/")({
 });
 function Scoreboard() {
   const { teams, ready, error } = useTeams();
-  if (!ready)
+  const { question, ready: questionReady } = useQuestion();
+  if (!ready || !questionReady)
     return <main className="empty" aria-label="Punktestand" aria-busy="true" />;
   return (
     <LazyMotion features={domMax} strict>
@@ -23,7 +26,9 @@ function Scoreboard() {
                 {error}
               </p>
             )}
-            {teams.length === 0 ? (
+            {question ? (
+              <QuestionDisplay />
+            ) : teams.length === 0 ? (
               <main className="empty scoreboard-empty">
                 <TeamBackground color="#4b0082" corner />
                 <p className="eyebrow">PUBQUIZ</p>
