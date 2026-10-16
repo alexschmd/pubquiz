@@ -38,8 +38,14 @@ function Scoreboard() {
             )}
             <div className="scoreboard-scenes">
               <AnimatePresence initial={false}>
-                <ScoreboardScene key={question ? "question" : "leaderboard"}>
-                  {question ? (
+                <ScoreboardScene
+                  key={
+                    question && question.visible !== false
+                      ? "question"
+                      : "leaderboard"
+                  }
+                >
+                  {question && question.visible !== false ? (
                     <QuestionDisplay question={question} />
                   ) : teams.length === 0 ? (
                     <main className="empty scoreboard-empty">

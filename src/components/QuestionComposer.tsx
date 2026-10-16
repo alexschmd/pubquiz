@@ -1,25 +1,30 @@
-import { Textarea } from "./ui/textarea";
 import { useState } from "react";
+import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Field, FieldGroup, FieldLabel, FieldDescription } from "./ui/field";
 import { Alert, AlertDescription } from "./ui/alert";
+import { parseQuestionList, type PreparedQuestion } from "../lib/questions";
 import {
   useQuestion,
   useRemainingSeconds,
   formatCountdown,
 } from "../context/QuestionContext";
 export function QuestionComposer() {
-  const { question, ready, error, publish, dismiss } = useQuestion();
+  const { question, ready, error, publish, dismiss, setQuestionVisible } =
+    useQuestion();
   const [text, setText] = useState("");
-  const [duration, setDuration] = useState("60");
-  const [nextIndex, setNextIndex] = useState(0);
-  const questions = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const nextQuestion = questions[nextIndex];
-  const tooLong = questions.some((line) => line.length > 1000);
+  const [selected, setSelected] = useState(0);
+  const [durations, setDurations] = useState<Record<number, string>>({});
+  let questions: PreparedQuestion[] = [];
+  let listError = "";
+  try {
+    questions = parseQuestionList(text);
+  } catch (error) {
+    listError = (error as Error).message;
+  }
+  const chosen = questions[selected];
+  const duration = durations[selected] ?? "60";
   const remaining = useRemainingSeconds(question);
   return (
     <section className="question-composer" aria-labelledby="question-title">
@@ -27,40 +32,90 @@ export function QuestionComposer() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (
-            nextQuestion &&
-            !tooLong &&
-            publish(nextQuestion, Number(duration))
-          )
-            setNextIndex((index) => index + 1);
+          if (chosen && !listError)
+            publish(chosen.text, Number(duration), {
+              number: chosen.number,
+              options: chosen.options,
+            });
         }}
       >
         <FieldGroup>
-          <Field data-invalid={tooLong}>
+          <Field data-invalid={!!listError}>
             <FieldLabel htmlFor="quiz-question">Fragen</FieldLabel>
             <Textarea
               id="quiz-question"
-              required
               maxLength={50000}
               rows={7}
               className="question-list-input"
               aria-describedby="question-list-help"
-              aria-invalid={tooLong}
+              aria-invalid={!!listError}
               placeholder={
-                "Welcher Planet ist der Sonne am nächsten?\nWie viele Bundesländer hat Deutschland?\nWer schrieb Faust?"
+                "1. Welcher Planet ist der Sonne am nächsten?; (Merkur) (Venus) (Mars)\n2. Wer schrieb Faust?"
               }
               value={text}
               onChange={(event) => {
                 setText(event.target.value);
-                setNextIndex(0);
+                setSelected(0);
+                setDurations({});
               }}
             />
             <FieldDescription id="question-list-help">
-              Eine Frage pro Zeile. Leerzeilen werden übersprungen. Änderungen
-              an der Liste starten die Reihenfolge neu.
-              {tooLong && " Eine Frage darf höchstens 1000 Zeichen lang sein."}
+              Eine Frage pro Zeile. Optional nummerieren: 1. Frage; (Antwort A)
+              (Antwort B). Ohne Nummer wird automatisch durchnummeriert.
+              Leerzeilen werden übersprungen.
             </FieldDescription>
           </Field>
+          {listError && (
+            <Alert variant="destructive">
+              <AlertDescription>{listError}</AlertDescription>
+            </Alert>
+          )}
+          {!!questions.length && (
+            <>
+              <div className="question-selection">
+                <Field>
+                  <FieldLabel htmlFor="selected-question">
+                    Frage auswählen
+                  </FieldLabel>
+                  <select
+                    id="selected-question"
+                    aria-label="Frage auswählen"
+                    value={selected}
+                    onChange={(event) =>
+                      setSelected(Number(event.target.value))
+                    }
+                  >
+                    {questions.map((item, index) => (
+                      <option key={item.number} value={index}>
+                        Frage {item.number}: {item.text}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={selected >= questions.length - 1}
+                  onClick={() => setSelected((index) => index + 1)}
+                >
+                  Nächste Frage auswählen
+                </Button>
+              </div>
+              <div className="question-preview">
+                <span>Vorbereitet · Frage {chosen.number}</span>
+                <p>{chosen.text}</p>
+                {!!chosen.options.length && (
+                  <ol>
+                    {chosen.options.map((option, index) => (
+                      <li key={String.fromCharCode(65 + index)}>
+                        {String.fromCharCode(65 + index)} · {option}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            </>
+          )}
           <div className="question-send">
             <Field className="w-32 shrink-0">
               <FieldLabel htmlFor="question-duration">
@@ -69,55 +124,53 @@ export function QuestionComposer() {
               <Input
                 id="question-duration"
                 type="number"
+                required
                 min={1}
                 max={3600}
                 step={1}
-                required
                 value={duration}
-                onChange={(event) => setDuration(event.target.value)}
+                onChange={(event) =>
+                  setDurations((current) => ({
+                    ...current,
+                    [selected]: event.target.value,
+                  }))
+                }
               />
             </Field>
-            <Button type="submit" disabled={!ready || !nextQuestion || tooLong}>
-              {nextIndex === 0
-                ? "Erste Frage starten"
-                : nextQuestion
-                  ? "Nächste Frage starten"
-                  : "Alle Fragen gestellt"}
+            <Button type="submit" disabled={!ready || !chosen || !!listError}>
+              Frage starten
             </Button>
           </div>
-          {questions.length > 0 && (
-            <div className="question-queue-status">
-              <p>
-                {nextQuestion
-                  ? `Als Nächstes (${nextIndex + 1}/${questions.length}): ${nextQuestion}`
-                  : `Alle ${questions.length} Fragen wurden gestellt.`}
-              </p>
-              {nextIndex > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setNextIndex(0)}
-                >
-                  Von vorne beginnen
-                </Button>
-              )}
-            </div>
-          )}
         </FieldGroup>
       </form>
       {question && (
         <div className="active-question">
           <div>
             <span className="active-question-label">
-              {remaining
-                ? `Läuft · ${formatCountdown(remaining)}`
-                : "Zeit abgelaufen"}
+              Frage {question.number ?? 1} ·{" "}
+              {remaining ? formatCountdown(remaining) : "Zeit abgelaufen"}
             </span>
             <p>{question.text}</p>
           </div>
-          <Button variant="outline" onClick={dismiss}>
-            Frage beenden
-          </Button>
+          <div className="question-view-controls">
+            <Button
+              variant={question.visible !== false ? "secondary" : "outline"}
+              aria-pressed={question.visible !== false}
+              onClick={() => setQuestionVisible(true)}
+            >
+              Frage anzeigen
+            </Button>
+            <Button
+              variant={question.visible === false ? "secondary" : "outline"}
+              aria-pressed={question.visible === false}
+              onClick={() => setQuestionVisible(false)}
+            >
+              Scoreboard anzeigen
+            </Button>
+            <Button variant="ghost" onClick={dismiss}>
+              Frage beenden
+            </Button>
+          </div>
         </div>
       )}
       {error && (

@@ -7,10 +7,20 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
   const remaining = useRemainingSeconds(question);
   return (
     <main className="question-display">
-      <p className="eyebrow">PUBQUIZ · FRAGE</p>
+      <p className="eyebrow">Frage {question.number ?? 1}</p>
       <h1>{question.text}</h1>
+      {!!question.options?.length && (
+        <ol className="question-options">
+          {question.options.map((option, index) => (
+            <li key={String.fromCharCode(65 + index)}>
+              <span>{String.fromCharCode(65 + index)}</span>
+              {option}
+            </li>
+          ))}
+        </ol>
+      )}
       <div
-        className="question-countdown"
+        className={`question-countdown${remaining > 0 && remaining <= 10 ? " countdown-urgent" : ""}`}
         role="timer"
         aria-label="Verbleibende Zeit"
       >

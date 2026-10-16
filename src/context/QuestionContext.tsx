@@ -1,14 +1,19 @@
+import type { PreparedQuestion } from "../lib/questions";
 import {
   createContext,
   useContext,
   useEffect,
   useState,
+  useMemo,
   type ReactNode,
 } from "react";
 export const QUESTION_KEY = "pubquiz-question";
 export interface QuizQuestion {
   text: string;
   endsAt: number;
+  number?: number;
+  options?: string[];
+  visible?: boolean;
 }
 export function parseQuestion(raw: string | null): QuizQuestion | null {
   if (!raw) return null;
@@ -25,13 +30,41 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
     !Number.isFinite(data.endsAt)
   )
     throw new Error("Ungültige Frage");
-  return { text: data.text, endsAt: data.endsAt };
+  if (
+    "number" in data &&
+    (!Number.isSafeInteger(data.number) || Number(data.number) < 1)
+  )
+    throw new Error("Ungültige Nummer");
+  if (
+    "options" in data &&
+    (!Array.isArray(data.options) ||
+      data.options.length > 8 ||
+      data.options.some(
+        (option) =>
+          typeof option !== "string" || !option.trim() || option.length > 300,
+      ))
+  )
+    throw new Error("Ungültige Antworten");
+  if ("visible" in data && typeof data.visible !== "boolean")
+    throw new Error("Ungültige Ansicht");
+  return {
+    text: data.text,
+    endsAt: data.endsAt,
+    ...("number" in data ? { number: data.number as number } : {}),
+    ...("options" in data ? { options: data.options as string[] } : {}),
+    ...("visible" in data ? { visible: data.visible as boolean } : {}),
+  };
 }
 interface QuestionState {
   question: QuizQuestion | null;
   ready: boolean;
   error: string | null;
-  publish: (text: string, seconds: number) => boolean;
+  publish: (
+    text: string,
+    seconds: number,
+    details?: Pick<PreparedQuestion, "number" | "options">,
+  ) => boolean;
+  setQuestionVisible: (visible: boolean) => void;
   dismiss: () => void;
 }
 const Context = createContext<QuestionState | null>(null);
@@ -58,50 +91,58 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
   }, []);
-  function persist(next: QuizQuestion | null) {
-    try {
-      localStorage.setItem(QUESTION_KEY, JSON.stringify(next));
-      setQuestion(next);
-      setError(null);
-      return true;
-    } catch {
-      setError(
-        "Die Frage konnte nicht gespeichert werden. Bitte Browserspeicher prüfen.",
-      );
-      return false;
+  const value = useMemo(() => {
+    function persist(next: QuizQuestion | null) {
+      try {
+        localStorage.setItem(QUESTION_KEY, JSON.stringify(next));
+        setQuestion(next);
+        setError(null);
+        return true;
+      } catch {
+        setError(
+          "Die Frage konnte nicht gespeichert werden. Bitte Browserspeicher prüfen.",
+        );
+        return false;
+      }
     }
-  }
-  function publish(text: string, seconds: number) {
-    if (!ready) return false;
-    if (
-      !text.trim() ||
-      text.trim().length > 1000 ||
-      !Number.isInteger(seconds) ||
-      seconds < 1 ||
-      seconds > 3600
+    function publish(
+      text: string,
+      seconds: number,
+      details?: Pick<PreparedQuestion, "number" | "options">,
     ) {
-      setError(
-        "Bitte eine Frage und eine Dauer von 1 bis 3600 Sekunden eingeben.",
-      );
-      return false;
+      if (!ready) return false;
+      if (
+        !text.trim() ||
+        text.trim().length > 1000 ||
+        !Number.isInteger(seconds) ||
+        seconds < 1 ||
+        seconds > 3600
+      ) {
+        setError(
+          "Bitte eine Frage und eine Dauer von 1 bis 3600 Sekunden eingeben.",
+        );
+        return false;
+      }
+      return persist({
+        text: text.trim(),
+        endsAt: Date.now() + seconds * 1000,
+        ...(details ? { ...details, visible: true } : {}),
+      });
     }
-    return persist({ text: text.trim(), endsAt: Date.now() + seconds * 1000 });
-  }
-  return (
-    <Context.Provider
-      value={{
-        question,
-        ready,
-        error,
-        publish,
-        dismiss: () => {
-          if (ready) persist(null);
-        },
-      }}
-    >
-      {children}
-    </Context.Provider>
-  );
+    return {
+      question,
+      ready,
+      error,
+      publish,
+      setQuestionVisible: (visible: boolean) => {
+        if (ready && question) persist({ ...question, visible });
+      },
+      dismiss: () => {
+        if (ready) persist(null);
+      },
+    };
+  }, [question, ready, error]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useQuestion() {
   const state = useContext(Context);

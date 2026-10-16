@@ -6,38 +6,48 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
 });
-test("publishes nonempty lines in order, stops at the end and can restart", () => {
+test("selects questions without publishing, remembers durations and switches views without restarting", () => {
   render(
     <QuestionProvider>
       <QuestionComposer />
     </QuestionProvider>,
   );
   fireEvent.change(screen.getByLabelText("Fragen"), {
-    target: { value: " Erste Frage?\r\n\n Zweite Frage? " },
+    target: { value: "4. Erste Frage?; (A) (B)\n\n5. Zweite Frage?" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Erste Frage starten" }));
-  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).text).toBe(
-    "Erste Frage?",
-  );
+  fireEvent.change(screen.getByLabelText("Dauer in Sekunden"), {
+    target: { value: "30" },
+  });
   fireEvent.click(
-    screen.getByRole("button", { name: "Nächste Frage starten" }),
+    screen.getByRole("button", { name: "Nächste Frage auswählen" }),
   );
-  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).text).toBe(
-    "Zweite Frage?",
-  );
+  expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
   expect(
-    (
-      screen.getByRole("button", {
-        name: "Alle Fragen gestellt",
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Von vorne beginnen" }));
+    (screen.getByLabelText("Dauer in Sekunden") as HTMLInputElement).value,
+  ).toBe("60");
+  fireEvent.change(screen.getByLabelText("Dauer in Sekunden"), {
+    target: { value: "90" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
+  expect(published.text).toBe("Zweite Frage?");
+  expect(published.number).toBe(5);
+  fireEvent.click(screen.getByRole("button", { name: "Scoreboard anzeigen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual({
+    ...published,
+    visible: false,
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toEqual(published);
+  fireEvent.change(screen.getByLabelText("Frage auswählen"), {
+    target: { value: "0" },
+  });
   expect(
-    (
-      screen.getByRole("button", {
-        name: "Erste Frage starten",
-      }) as HTMLButtonElement
-    ).disabled,
-  ).toBe(false);
+    (screen.getByLabelText("Dauer in Sekunden") as HTMLInputElement).value,
+  ).toBe("30");
+  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).options).toEqual([
+    "A",
+    "B",
+  ]);
 });
