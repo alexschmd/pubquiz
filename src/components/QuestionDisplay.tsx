@@ -1,12 +1,10 @@
 import {
-  useQuestion,
+  type QuizQuestion,
   useRemainingSeconds,
   formatCountdown,
 } from "../context/QuestionContext";
-export function QuestionDisplay() {
-  const { question } = useQuestion();
+export function QuestionDisplay({ question }: { question: QuizQuestion }) {
   const remaining = useRemainingSeconds(question);
-  if (!question) return null;
   return (
     <main className="question-display">
       <p className="eyebrow">PUBQUIZ · FRAGE</p>

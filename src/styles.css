@@ -708,3 +708,15 @@ h1 {
 .question-display {
   justify-content: safe center;
 }
+
+.scoreboard-scenes {
+  display: grid;
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+}
+.scoreboard-scene {
+  grid-area: 1 / 1;
+  min-width: 0;
+  transform-origin: center;
+}
