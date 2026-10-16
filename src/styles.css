@@ -1395,7 +1395,7 @@ h1 {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   background: #101116;
 }
 .scoreboard-preview-frame {
