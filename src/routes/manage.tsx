@@ -32,23 +32,13 @@ import { createTeam, MAX_TEAMS, type Team } from "../lib/teams";
 export const Route = createFileRoute("/manage")({ component: Manage });
 
 function tileStyle(color: string): CSSProperties {
-  const channels = color
-    .slice(1)
-    .match(/../g)!
-    .map((hex) => {
-      const channel = parseInt(hex, 16) / 255;
-      return channel <= 0.04045
-        ? channel / 12.92
-        : ((channel + 0.055) / 1.055) ** 2.4;
-    });
-  const luminance =
-    channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
-  const ink = luminance > 0.179 ? "#101116" : "#ffffff";
+  const ink = "#eeeeef";
+  const surface = `color-mix(in srgb, ${color} 16%, #101116)`;
   return {
-    "--background": color,
+    "--background": surface,
     "--foreground": ink,
-    "--muted": `color-mix(in srgb, ${color}, ${ink} 12%)`,
-    "--border": `color-mix(in srgb, ${color}, ${ink} 25%)`,
+    "--muted": `color-mix(in srgb, ${color} 24%, #101116)`,
+    "--border": `color-mix(in srgb, ${color} 32%, #303035)`,
     "--ring": ink,
   } as CSSProperties;
 }
@@ -80,7 +70,7 @@ function Manage() {
           <Link to="/" className="quiz-wordmark">
             pubquiz<span>/</span>
           </Link>
-          <h1>Punktestand</h1>
+          <h1>punktestand</h1>
         </div>
         <div className="management-actions">
           <Button

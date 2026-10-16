@@ -543,3 +543,27 @@ h1 {
     font-size: 18px;
   }
 }
+.management-breadcrumb {
+  gap: 0;
+}
+.management-breadcrumb .quiz-wordmark span {
+  margin-left: 3px;
+  margin-right: 0;
+}
+.management-breadcrumb h1 {
+  margin: 0;
+}
+.management .team-sheet {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin-top: 24px;
+  overflow: visible;
+}
+.management .sheet-heading {
+  border: 0;
+  padding: 0 0 16px;
+}
+.management .management-tiles {
+  padding: 0;
+}
