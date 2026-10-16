@@ -373,3 +373,23 @@ footer {
   align-items: center;
   justify-content: center;
 }
+
+/* Separate tiles, with a longer, eased fade from the team color into black. */
+.score-tile .team-background {
+  mask-image: none;
+}
+.score-tile .team-gradient {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  background: radial-gradient(
+    ellipse 110% 115% at 50% 0%,
+    color-mix(in srgb, var(--team-color) 90%, #101116) 0%,
+    color-mix(in srgb, var(--team-color) 78%, #101116) 18%,
+    color-mix(in srgb, var(--team-color) 55%, #101116) 38%,
+    color-mix(in srgb, var(--team-color) 29%, #101116) 58%,
+    color-mix(in srgb, var(--team-color) 10%, #101116) 78%,
+    #101116 100%
+  );
+}
