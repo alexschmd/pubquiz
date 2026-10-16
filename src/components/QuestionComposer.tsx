@@ -144,7 +144,9 @@ export function QuestionComposer() {
       ? question?.correctOptions?.length && !question.solutionRevealed
         ? "Lösung aufdecken"
         : "Zurück zum Leaderboard"
-      : "Frage abbrechen";
+      : question?.pausedRemainingMs !== undefined
+        ? "Zeit starten"
+        : "Zeit stoppen";
   const visibleAnswers = selectedIsActive
     ? (question?.revealedOptions ?? [])
     : chosen
@@ -439,13 +441,13 @@ export function QuestionComposer() {
       <div className="question-control-bar">
         <div className="question-start-controls">
           <Button
-            variant={
-              mainAction === "Frage abbrechen" ? "destructive" : "default"
-            }
             disabled={!ready || !chosen}
             onClick={() => {
-              if (mainAction === "Frage abbrechen") {
-                setAbortOpen(true);
+              if (
+                mainAction === "Zeit starten" ||
+                mainAction === "Zeit stoppen"
+              ) {
+                toggleTimer();
                 return;
               }
               if (mainAction === "Lösung aufdecken") {
@@ -464,20 +466,33 @@ export function QuestionComposer() {
                     ? { correctOptions: chosen.correctOptions }
                     : {}),
                   revealedOptions: visibleAnswers,
+                  startPaused: true,
                 });
             }}
           >
-            {mainAction === "Frage abbrechen" ? (
-              <Square data-icon="inline-start" />
+            {mainAction === "Zeit stoppen" ? (
+              <Pause data-icon="inline-start" />
             ) : mainAction === "Lösung aufdecken" ? (
               <Eye data-icon="inline-start" />
-            ) : mainAction === "Frage starten" ? (
+            ) : mainAction === "Frage starten" ||
+              mainAction === "Zeit starten" ? (
               <Play data-icon="inline-start" />
             ) : (
               <Monitor data-icon="inline-start" />
             )}
             {mainAction}
           </Button>
+          {selectedIsActive && (
+            <Button
+              variant="destructive"
+              size="icon"
+              aria-label="Frage abbrechen"
+              title="Frage abbrechen"
+              onClick={() => setAbortOpen(true)}
+            >
+              <Square />
+            </Button>
+          )}
         </div>
       </div>
       {(error || bankError) && (

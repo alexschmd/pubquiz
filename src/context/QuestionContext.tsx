@@ -137,6 +137,7 @@ interface QuestionState {
       "number" | "options" | "correctOptions"
     > & {
       revealedOptions?: number[];
+      startPaused?: boolean;
     },
   ) => boolean;
   setQuestionVisible: (visible: boolean) => void;
@@ -193,6 +194,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         "number" | "options" | "correctOptions"
       > & {
         revealedOptions?: number[];
+        startPaused?: boolean;
       },
     ) {
       if (!ready) return false;
@@ -208,13 +210,15 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         );
         return false;
       }
+      const { startPaused, ...questionDetails } = details ?? {};
       return persist({
+        ...(startPaused ? { pausedRemainingMs: seconds * 1000 } : {}),
         text: text.trim(),
         endsAt: Date.now() + seconds * 1000,
         durationMs: seconds * 1000,
         ...(details
           ? {
-              ...details,
+              ...questionDetails,
               visible: true,
               revealedOptions: details.revealedOptions ?? [],
             }

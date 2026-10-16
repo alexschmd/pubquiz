@@ -246,14 +246,28 @@ test("returns to leaderboard after expiry and confirms aborting a running questi
   expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
-  fireEvent.click(screen.getByText("Frage abbrechen", { selector: "button" }));
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
+  ).toBe(60000);
+  fireEvent.click(screen.getByRole("button", { name: "Zeit starten" }));
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
+  ).toBeUndefined();
+  expect(screen.getAllByRole("button", { name: "Zeit stoppen" }).length).toBe(
+    2,
+  );
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Frage abbrechen" }).at(-1)!,
+  );
   let dialog = await screen.findByRole("alertdialog");
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
   fireEvent.click(
     within(dialog).getByRole("button", { name: "Weiterlaufen lassen" }),
   );
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
-  fireEvent.click(screen.getByText("Frage abbrechen", { selector: "button" }));
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Frage abbrechen" }).at(-1)!,
+  );
   dialog = await screen.findByRole("alertdialog");
   fireEvent.click(
     within(dialog).getByRole("button", { name: "Frage abbrechen" }),

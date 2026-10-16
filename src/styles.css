@@ -1434,3 +1434,6 @@ h1 {
   --muted: color-mix(in srgb, var(--team-color) 32%, #101116);
   --ring: color-mix(in srgb, var(--team-color) 65%, var(--foreground) 35%);
 }
+.question-control-bar .question-start-controls { display: flex; gap: 8px; }
+.question-start-controls > [data-slot="button"]:first-child { flex: 1; min-width: 0; }
+.question-start-controls > [data-slot="button"]:not(:first-child) { width: 32px; flex-shrink: 0; }
