@@ -1129,3 +1129,19 @@ h1 {
   margin: 0;
   line-height: 1.5;
 }
+.question-control-bar .question-start-controls {
+  width: 100%;
+}
+.question-start-controls > [data-slot="button"] {
+  width: 100%;
+  justify-content: space-between;
+}
+.question-compact-duration input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.question-compact-duration input[type="number"]::-webkit-inner-spin-button,
+.question-compact-duration input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

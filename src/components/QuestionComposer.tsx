@@ -7,7 +7,15 @@ import {
   SelectItem,
 } from "./ui/select";
 import { QUESTION_IMPORT_PROMPT } from "../lib/question-import-prompt";
-import { Eye, EyeOff, Plus, ListChecks, Copy, Check } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Plus,
+  ListChecks,
+  Copy,
+  Check,
+  ChevronRight,
+} from "lucide-react";
 import {
   Empty,
   EmptyHeader,
@@ -205,12 +213,8 @@ export function QuestionComposer() {
             }}
           >
             Frage starten
+            <ChevronRight data-icon="inline-end" />
           </Button>
-          <span>
-            {chosen
-              ? `Ausgewählt: Frage ${chosen.number}`
-              : "Keine Frage ausgewählt"}
-          </span>
         </div>
       </div>
       {!!question?.options?.length && (
