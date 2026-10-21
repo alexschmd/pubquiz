@@ -42,6 +42,11 @@
   --destructive: #f08080;
 }
 @layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
   * {
     border-color: var(--border);
   }
