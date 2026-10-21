@@ -122,7 +122,7 @@ function Manage() {
               <EmptyContent>
                 <Button onClick={edit}>
                   <Plus data-icon="inline-start" />
-                  Team anlegen
+                  Team hinzufügen
                 </Button>
               </EmptyContent>
             </Empty>
