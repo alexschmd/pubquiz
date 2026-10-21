@@ -18,7 +18,7 @@ export function ScoreboardPreview({ children }: { children?: ReactNode }) {
     <div className="scoreboard-preview" ref={frame}>
       {width > 0 && (
         <iframe
-          src="/"
+          src="/quiz"
           title="Live-Vorschau des Scoreboards"
           tabIndex={-1}
           className="scoreboard-preview-frame"

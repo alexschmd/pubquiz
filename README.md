@@ -11,7 +11,8 @@ npm ci
 npm run dev
 ```
 
-- Scoreboard: http://localhost:3000
+- Startseite: http://localhost:3000
+- Scoreboard: http://localhost:3000/quiz
 - Verwaltung: http://localhost:3000/manage
 
 Bis zu zehn Teams können angelegt, benannt, eingefärbt und gelöscht werden. Die Verwaltung vergibt oder entfernt einzelne Punkte. Das Scoreboard sortiert nach Punkten.
@@ -63,3 +64,7 @@ Antwortfreigaben lassen sich bereits für die ausgewählte Frage vorbereiten. Be
 Die richtigen Antworten werden in der Verwaltung per Haken am Ende einer Antwortgruppe markiert oder direkt importiert: `1. Planet?; (Merkur*) (Venus)`. Mehrere Antworten dürfen mit `*` markiert werden. Der KI-Importprompt berücksichtigt diese Markierung, sofern die Lösung im Dokument angegeben ist. Die Markierung ist auf dem Scoreboard zunächst verborgen. „Lösung aufdecken“ zeigt alle Antworten, hebt alle richtigen grün hervor und dimmt die übrigen; „Lösung verbergen“ entfernt die Hervorhebung. Das Aufdecken verändert die Countdown-Zeit nicht.
 
 Fragen werden intern strukturiert gespeichert. Ältere gespeicherte Textlisten werden weiterhin übernommen. Der Textimport bleibt im bisherigen Format; ein JSON-Import ist nicht erforderlich. Inhalte mit Sonderzeichen des Importformats können im Editor bearbeitet und gespeichert werden.
+
+## Routen und Quizstatus
+
+`/` zeigt die Landingpage. Sobald in `/manage` „Quiz starten“ gewählt wird, leitet die Landingpage automatisch nach `/quiz` weiter. `/quiz` bleibt direkt erreichbar und zeigt Fragen oder Platzierungen. „Quiz beenden“ entfernt die aktive Frage und gibt die Landingpage wieder frei; Teams und vorbereitete Fragen bleiben erhalten. Der Status liegt unter `pubquiz-running` im localStorage und wird zwischen Tabs derselben Origin synchronisiert.

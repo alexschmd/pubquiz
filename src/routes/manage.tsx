@@ -1,3 +1,5 @@
+import { useQuiz } from "../context/QuizContext";
+import { useQuestion } from "../context/QuestionContext";
 import { QuestionComposer } from "../components/QuestionComposer";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type CSSProperties } from "react";
@@ -49,6 +51,8 @@ function tileStyle(color: string): CSSProperties {
 }
 
 function Manage() {
+  const { running, ready: quizReady, error: quizError, setRunning } = useQuiz();
+  const { dismiss } = useQuestion();
   const { teams, ready, error, updateScore, saveTeams } = useTeams();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Team[]>([]);
@@ -79,18 +83,27 @@ function Manage() {
         </div>
         <div className="management-actions">
           <Button
+            variant={running ? "outline" : "default"}
+            disabled={!quizReady}
+            onClick={() => {
+              if (setRunning(!running) && running) dismiss();
+            }}
+          >
+            {running ? "Quiz beenden" : "Quiz starten"}
+          </Button>
+          <Button
             variant="ghost"
             nativeButton={false}
-            render={<Link to="/" target="_blank" rel="noopener" />}
+            render={<Link to="/quiz" target="_blank" rel="noopener" />}
           >
             <ArrowUpRight data-icon="inline-start" />
             Scoreboard öffnen
           </Button>
         </div>
       </header>
-      {error && (
+      {(error || quizError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error || quizError}</AlertDescription>
         </Alert>
       )}
       <div className="management-columns">

@@ -1443,3 +1443,54 @@ h1 {
   letter-spacing: normal;
   color: #b9a3ee;
 }
+
+.landing { max-width: 1120px; margin: 0 auto; padding: 32px 24px; min-height: 100dvh; }
+.landing-intro { min-height: 75dvh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 24px; }
+.landing-intro h1 { font-size: clamp(40px, 7vw, 88px); line-height: 1.08; letter-spacing: -0.045em; font-weight: 600; margin: 0; }
+.landing-intro > p:not(.eyebrow) { max-width: 500px; color: var(--muted-foreground); font-size: 18px; line-height: 1.6; margin: 0; }
+.landing-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.not-found-content[data-slot="empty"] {
+  min-height: calc(100dvh - 128px);
+  gap: 28px;
+  padding: 64px 0;
+}
+.not-found-header[data-slot="empty-header"] {
+  max-width: none;
+  gap: 16px;
+}
+.not-found-code {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.not-found-header h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.not-found-actions[data-slot="empty-content"] {
+  max-width: none;
+}
+.not-found-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.not-found-back svg {
+  width: 14px;
+  height: 14px;
+}
+.not-found-back:hover {
+  color: var(--foreground);
+}
