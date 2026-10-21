@@ -37,3 +37,7 @@ yarn-error.log*
 next-env.d.ts
 
 #GitHub
+# TanStack Start / Nitro
+.output/
+.tanstack/
+dist/
