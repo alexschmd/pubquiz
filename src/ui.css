@@ -41,6 +41,12 @@
   --ring: #aaaab1;
   --destructive: #f08080;
 }
+/* shadcn Neutral dark background for the not-found page. */
+:root:has(.not-found) {
+  --background: oklch(0.145 0 0);
+  background: var(--background);
+}
+
 @layer base {
   button:not(:disabled):not([aria-disabled="true"]),
   [role="button"]:not(:disabled):not([aria-disabled="true"]) {
