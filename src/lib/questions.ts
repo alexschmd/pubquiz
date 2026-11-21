@@ -3,6 +3,7 @@ export interface PreparedQuestion {
   text: string;
   options: string[];
   correctOptions?: number[];
+  solution?: string;
 }
 export function parseQuestionList(source: string): PreparedQuestion[] {
   const used = new Set<number>();
@@ -19,14 +20,6 @@ export function parseQuestionList(source: string): PreparedQuestion[] {
         separator < 0 ? content : content.slice(0, separator)
       ).trim();
       const answers = separator < 0 ? "" : content.slice(separator + 1).trim();
-      const options = [...answers.matchAll(/\(([^()]*)\)/g)].map((match) =>
-        match[1].trim(),
-      );
-      const marked = options
-        .map((option, index) => (option.endsWith("*") ? index : -1))
-        .filter((index) => index >= 0);
-      for (const index of marked)
-        options[index] = options[index].slice(0, -1).trim();
       if (!Number.isSafeInteger(number) || number < 1 || used.has(number))
         throw new Error(
           `Frage ${index + 1}: Bitte eindeutige positive Nummern verwenden.`,
@@ -36,6 +29,22 @@ export function parseQuestionList(source: string): PreparedQuestion[] {
         throw new Error(
           `Frage ${number}: Der Fragetext muss 1 bis 1000 Zeichen enthalten.`,
         );
+      if (answers.startsWith("=")) {
+        const solution = answers.slice(1).trim();
+        if (solution.length < 1 || solution.length > 300)
+          throw new Error(
+            `Frage ${number}: Die Lösung nach „; =“ muss 1 bis 300 Zeichen enthalten.`,
+          );
+        return { number, text, options: [], solution };
+      }
+      const options = [...answers.matchAll(/\(([^()]*)\)/g)].map((match) =>
+        match[1].trim(),
+      );
+      const marked = options
+        .map((option, index) => (option.endsWith("*") ? index : -1))
+        .filter((index) => index >= 0);
+      for (const index of marked)
+        options[index] = options[index].slice(0, -1).trim();
       if (
         answers &&
         (answers.replace(/\([^()]*\)/g, "").trim() ||
@@ -79,12 +88,19 @@ export function validateQuestions(value: unknown): PreparedQuestion[] {
               !Number.isInteger(index) ||
               Number(index) < 0 ||
               Number(index) >= item.options.length,
-          )))
+          ))) ||
+      (item.solution !== undefined &&
+        (typeof item.solution !== "string" ||
+          item.solution.trim().length > 300))
     )
       throw new Error(
-        "Bitte alle Fragen und Antworten ausfüllen (max. 1000 Zeichen je Frage, 300 je Antwort und acht Antworten).",
+        "Bitte alle Fragen und Antworten ausfüllen (max. 1000 Zeichen je Frage, 300 je Antwort bzw. Lösung und acht Antworten).",
       );
     used.add(item.number);
+    const solution =
+      item.options.length === 0 && typeof item.solution === "string"
+        ? item.solution.trim()
+        : "";
     return {
       number: item.number,
       text: item.text.trim(),
@@ -92,6 +108,7 @@ export function validateQuestions(value: unknown): PreparedQuestion[] {
       ...(item.correctOptions?.length
         ? { correctOptions: [...new Set<number>(item.correctOptions)] }
         : {}),
+      ...(solution ? { solution } : {}),
     };
   });
 }
@@ -100,6 +117,7 @@ export function serializeQuestions(questions: PreparedQuestion[]): string {
     questions.some(
       (item) =>
         /[;\r\n]/.test(item.text) ||
+        /[\r\n]/.test(item.solution ?? "") ||
         item.options.some(
           (option) => /[()\r\n]/.test(option) || option.endsWith("*"),
         ),
@@ -109,9 +127,10 @@ export function serializeQuestions(questions: PreparedQuestion[]): string {
       "Diese Inhalte enthalten Sonderzeichen des Textformats. Bitte im Editor weiterbearbeiten.",
     );
   return questions
-    .map(
-      (item) =>
-        `${item.number}. ${item.text}${item.options.length ? `; ${item.options.map((option, index) => `(${option}${item.correctOptions?.includes(index) ? "*" : ""})`).join(" ")}` : ""}`,
-    )
+    .map((item) => {
+      if (!item.options.length)
+        return `${item.number}. ${item.text}${item.solution ? `; =${item.solution}` : ""}`;
+      return `${item.number}. ${item.text}; ${item.options.map((option, index) => `(${option}${item.correctOptions?.includes(index) ? "*" : ""})`).join(" ")}`;
+    })
     .join("\n");
 }
