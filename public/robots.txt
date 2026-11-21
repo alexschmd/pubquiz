@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /regie
+Disallow: /quiz
+
+Sitemap: https://pubquiz.schmidalex.de/sitemap.xml
