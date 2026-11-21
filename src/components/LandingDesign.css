@@ -1,0 +1,918 @@
+/* ==========================================================================
+   Pubquiz Landing Page — Bühne & Beamer
+   ========================================================================== */
+
+.design-buehne {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100svh;
+  background: #111111;
+  color: #f1f1f5;
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  padding-inline: clamp(24px, 5vw, 72px);
+}
+
+.buehne-ambient {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 940px;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  /* Eased fade (no linear kinks): a piecewise-linear mask creates a visible
+     Mach band where the slope changes, which read as a hard edge below the
+     hero actions. */
+  --buehne-ambient-fade: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.99) 15%,
+    rgba(0, 0, 0, 0.96) 27%,
+    rgba(0, 0, 0, 0.91) 38%,
+    rgba(0, 0, 0, 0.84) 48%,
+    rgba(0, 0, 0, 0.74) 57%,
+    rgba(0, 0, 0, 0.62) 65%,
+    rgba(0, 0, 0, 0.48) 73%,
+    rgba(0, 0, 0, 0.34) 80%,
+    rgba(0, 0, 0, 0.21) 87%,
+    rgba(0, 0, 0, 0.1) 93%,
+    rgba(0, 0, 0, 0.03) 97%,
+    transparent 100%
+  );
+  -webkit-mask-image: var(--buehne-ambient-fade);
+  mask-image: var(--buehne-ambient-fade);
+}
+
+.buehne-ambient-canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0.58;
+}
+
+/* Hidden until the first WebGL frame (or the settled CSS fallback), so a
+   reload fades the gradient in instead of flashing the fallback first. */
+.buehne-ambient-canvas canvas {
+  opacity: 0;
+  transition: opacity 700ms ease-out;
+}
+
+.buehne-ambient-canvas canvas[data-gradient-state="live"],
+.buehne-ambient-canvas canvas[data-gradient-state="fallback"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buehne-ambient-canvas canvas {
+    transition: none;
+  }
+}
+
+.buehne-nav {
+  max-width: 1240px;
+  margin: 0 auto;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.buehne-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  font-size: 13px;
+}
+
+.buehne-nav-links a {
+  color: #a3a3b0;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.buehne-nav-links a:hover {
+  color: #ffffff;
+}
+
+.buehne-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f1f1f5 !important;
+  font-weight: 500;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.buehne-nav-cta:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.buehne-hero {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(92px, 12vh, 144px) 0 48px;
+}
+
+.buehne-hero-copy {
+  max-width: 740px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.buehne-hero h1 {
+  font-size: clamp(42px, 5.6vw, 72px);
+  font-weight: 550;
+  line-height: 1.07;
+  letter-spacing: -0.05em;
+  margin: 0 0 24px;
+  text-wrap: balance;
+}
+
+.buehne-hero h1 span {
+  color: #9b9baa;
+}
+
+.buehne-hero-copy > p {
+  font-size: 16px;
+  line-height: 1.72;
+  color: #9e9eac;
+  max-width: 520px;
+  margin: 0 auto 36px;
+  text-wrap: pretty;
+}
+
+.buehne-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* CTAs use the shared <Button>; the landing keeps its light primary via tokens. */
+.buehne-actions {
+  --primary: #f2f2f5;
+  --primary-foreground: #111116;
+}
+
+.buehne-btn[data-slot="button"] {
+  height: 44px;
+  padding-inline: 20px;
+  font-size: 14px;
+}
+
+.buehne-arrow-right,
+.buehne-arrow-diag {
+  /* Own compositor layer: the ambient gradient keeps the main thread busy
+     every frame, so a main-thread transform transition stutters and snaps
+     to whole pixels. On the compositor it stays smooth and sub-pixel. */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.buehne-btn:hover .buehne-arrow-right,
+.buehne-nav-cta:hover .buehne-arrow-right {
+  transform: translate3d(3px, 0, 0);
+}
+
+.buehne-btn:hover .buehne-arrow-diag,
+.buehne-footer-cta:hover .buehne-arrow-diag {
+  transform: translate3d(2px, -2px, 0);
+}
+
+/* Interactive Dual-Screen Stage */
+.buehne-stage {
+  margin-top: clamp(80px, 9.5vw, 124px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.26fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.buehne-pane {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111111;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 28px 84px rgba(0, 0, 0, 0.48);
+}
+
+.buehne-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: #9e9ead;
+}
+
+.buehne-pane-meta {
+  color: #6e6e7c;
+  font-size: 11px;
+}
+
+.buehne-mode-switch {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.buehne-mode-switch button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: #9a9aa8;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.buehne-mode-switch button:hover {
+  color: #e6e6ee;
+}
+
+.buehne-mode-switch button.is-active {
+  color: #ffffff;
+}
+
+.buehne-mode-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.buehne-mode-label {
+  position: relative;
+  z-index: 1;
+}
+
+.buehne-regie-teams {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.buehne-regie-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.buehne-regie-tile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: start;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--t-color) 32%, #303030);
+  background: color-mix(in srgb, var(--t-color) 16%, #111111);
+  transition: border-color 180ms ease;
+}
+
+.buehne-regie-tile:hover {
+  border-color: color-mix(in srgb, var(--t-color) 52%, #444444);
+}
+
+.buehne-team-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #f0f0f0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.buehne-tile-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 1px;
+}
+
+.buehne-team-score {
+  font-size: 24px;
+  font-weight: 550;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: #f0f0f0;
+}
+
+.buehne-tile-score > span {
+  font-size: 10.5px;
+  color: #f0f0f0;
+  opacity: 0.7;
+}
+
+.buehne-steppers {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+}
+
+.buehne-steppers button {
+  flex: 1;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--t-color) 55%, rgba(255, 255, 255, 0.3));
+  background: color-mix(in srgb, var(--t-color) 8%, #111111);
+  color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.buehne-steppers button:hover {
+  background: color-mix(in srgb, var(--t-color) 28%, #111111);
+}
+
+.buehne-steppers button:active {
+  transform: scale(0.96);
+}
+
+.buehne-hint {
+  margin: auto 0 0;
+  padding-top: 8px;
+  font-size: 12px;
+  color: #888894;
+  line-height: 1.5;
+}
+
+.buehne-regie-question {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.buehne-q-meta {
+  font-size: 12px;
+  color: #9a9aa8;
+  font-weight: 500;
+}
+
+.buehne-q-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 550;
+  letter-spacing: -0.02em;
+  line-height: 1.32;
+}
+
+.buehne-q-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.buehne-q-opt-row {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12.5px;
+}
+
+.buehne-q-eye {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #8c8c9a;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.buehne-q-eye:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f0f0;
+}
+
+.buehne-q-eye.is-shown {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f2f2f5;
+}
+
+.buehne-q-letter {
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c8c9a;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+}
+
+.buehne-q-opt-text {
+  padding: 0 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e8e8ee;
+}
+
+.buehne-q-correct {
+  padding-right: 8px;
+  display: inline-flex;
+  color: #71d5a0;
+}
+
+.buehne-q-controls {
+  display: flex;
+}
+
+.buehne-live-badge {
+  color: #d4d4df;
+  font-weight: 550;
+}
+
+.buehne-beamer-scene {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.buehne-beamer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1;
+  min-height: 380px;
+}
+
+.buehne-beamer-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 18px;
+  text-align: center;
+  background: radial-gradient(
+    ellipse 110% 115% at 50% 0%,
+    color-mix(in srgb, var(--t-color) 85%, #111111) 0%,
+    color-mix(in srgb, var(--t-color) 45%, #111111) 42%,
+    color-mix(in srgb, var(--t-color) 12%, #111111) 76%,
+    #111111 100%
+  );
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.buehne-beamer-tile[data-place="1"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px #f3d18335;
+}
+
+.buehne-beamer-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f4f4f8;
+}
+
+.buehne-beamer-score {
+  font-size: clamp(48px, 5.2vw, 72px);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  margin: 14px 0;
+}
+
+.buehne-beamer-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #11111185;
+  border: 1px solid #ffffff1c;
+  font-size: 11px;
+  font-weight: 550;
+  color: #b8b8c2;
+  backdrop-filter: blur(8px);
+}
+
+.buehne-beamer-rank[data-place="1"] {
+  color: #f3d183;
+  border-color: #e8bd6745;
+  background: #49371670;
+}
+
+.buehne-beamer-rank[data-place="2"] {
+  color: #d7e1f0;
+  border-color: #becde345;
+  background: #2f394a70;
+}
+
+.buehne-beamer-rank[data-place="3"] {
+  color: #e5b195;
+  border-color: #cb916a45;
+  background: #49302370;
+}
+
+.buehne-rank-hash {
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+.buehne-beamer-question {
+  position: relative;
+  flex: 1;
+  min-height: 380px;
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at top, #302347, #111111 70%);
+}
+
+.buehne-beamer-question.has-options {
+  padding-top: 68px;
+}
+
+.buehne-beamer-q-label {
+  font-size: 14px;
+  color: #b9a3ee;
+  font-weight: 400;
+}
+
+.buehne-beamer-question h3 {
+  margin: 10px 0 22px;
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.buehne-beamer-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.buehne-beamer-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #ffffff24;
+  background: #ffffff06;
+  font-size: 13.5px;
+  text-align: left;
+  transition: border-color 220ms ease, background-color 220ms ease, opacity 220ms ease;
+}
+
+.buehne-beamer-opt > span:first-child {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.buehne-beamer-opt.is-correct {
+  border-color: #62cc93;
+  background: #164b32;
+  color: #e5ffee;
+}
+
+.buehne-beamer-opt.is-dimmed {
+  opacity: 0.4;
+}
+
+.buehne-opt-check {
+  margin-left: auto;
+  display: inline-flex;
+  color: #85e9b0;
+}
+
+.buehne-beamer-timer-wrap {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.buehne-beamer-question.has-options .buehne-beamer-timer-wrap {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  margin-top: 0;
+  align-items: flex-end;
+}
+
+.buehne-beamer-timer {
+  font-size: 46px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: #ececf4;
+}
+
+.buehne-beamer-question.has-options .buehne-beamer-timer {
+  font-size: 26px;
+}
+
+.buehne-beamer-timer-label {
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: #9e9ea8;
+}
+
+.buehne-steps,
+.buehne-features {
+  max-width: 1240px;
+  margin: clamp(84px, 9.5vw, 132px) auto 0;
+  padding: clamp(64px, 7vw, 96px) 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.buehne-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
+  gap: clamp(32px, 6vw, 88px);
+  align-items: start;
+}
+
+.buehne-split-head h2,
+.buehne-details h2 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: #f4f4f8;
+}
+
+.buehne-split-head p {
+  margin: 14px 0 0;
+  max-width: 340px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #8f8f9d;
+  text-wrap: pretty;
+}
+
+.buehne-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.buehne-step-list li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 16px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.buehne-step-list li:first-child {
+  padding-top: 4px;
+  border-top: 0;
+}
+
+.buehne-step-num {
+  font-size: 13px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  color: #6f6f7d;
+  padding-top: 2px;
+}
+
+.buehne-step-list h3,
+.buehne-detail-list h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 550;
+  letter-spacing: -0.02em;
+  color: #ececf2;
+}
+
+.buehne-step-list p,
+.buehne-detail-list p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #8f8f9d;
+}
+
+.buehne-step-list code,
+.buehne-detail-list code {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e2ec;
+}
+
+.buehne-features-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(36px, 6vw, 80px);
+  align-items: start;
+}
+
+.buehne-import-showcase {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #161616;
+  overflow: hidden;
+}
+
+.buehne-import-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: #a3a3b0;
+}
+
+.buehne-import-bar > span:last-child {
+  color: #6e6e7a;
+  font-variant-numeric: tabular-nums;
+}
+
+.buehne-import-body {
+  padding: 20px 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: #d8d8e0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buehne-import-body p {
+  margin: 0;
+}
+
+.buehne-import-body .tok-num {
+  color: #747482;
+}
+
+.buehne-import-body .tok-sep {
+  color: #666674;
+}
+
+.buehne-import-body .tok-opt {
+  color: #9e9eae;
+}
+
+.buehne-import-body .tok-correct {
+  color: #85e9b0;
+  background: rgba(22, 75, 50, 0.45);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.buehne-details h2 {
+  margin-bottom: 28px;
+}
+
+.buehne-detail-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.buehne-detail-list article {
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.buehne-detail-list article:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.buehne-closing {
+  max-width: 1240px;
+  margin: clamp(80px, 9vw, 120px) auto 0;
+  padding: clamp(48px, 6vw, 72px) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.buehne-closing h2 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 2.8vw, 32px);
+  font-weight: 550;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: #f4f4f8;
+}
+
+.buehne-closing p {
+  margin: 0;
+  font-size: 14.5px;
+  color: #8f8f9d;
+}
+
+.buehne-closing-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.buehne-footer {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 0 56px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.buehne-footer .quiz-wordmark {
+  font-size: 16px;
+  color: #8e8e9c;
+}
+
+.buehne-footer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #c6c6d2;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 150ms ease;
+}
+
+.buehne-footer-cta:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 960px) {
+  .buehne-stage,
+  .buehne-split,
+  .buehne-features-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .buehne-beamer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .buehne-nav-links > a:not(.buehne-nav-cta) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design-buehne *,
+  .design-buehne *::before {
+    transition: none !important;
+    animation: none !important;
+  }
+}
