@@ -77,3 +77,45 @@ test("validates team data and retains all teams in one to ten team layouts", () 
     expect(teamRows(teams).flat()).toEqual(teams);
   }
 });
+
+test("clamps scores at zero and trims or rejects blank team names", async () => {
+  function EditorProbe() {
+    const { teams, error, updateScore, saveTeams } = useTeams();
+    return (
+      <>
+        <span>{teams[0] ? `${teams[0].name}:${teams[0].score}` : "leer"}</span>
+        <span>{error ?? "ok"}</span>
+        <button onClick={() => updateScore(1, -5)}>Minus</button>
+        <button
+          onClick={() =>
+            saveTeams([{ ...team, name: "   ", score: 0 }])
+          }
+        >
+          Leer
+        </button>
+        <button
+          onClick={() =>
+            saveTeams([{ ...team, name: "  Trimmed  ", score: 0 }])
+          }
+        >
+          Trim
+        </button>
+      </>
+    );
+  }
+  localStorage.setItem("teams", JSON.stringify([{ ...team, score: 2 }]));
+  render(
+    <TeamsProvider>
+      <EditorProbe />
+    </TeamsProvider>,
+  );
+  await screen.findByText("Bestand:2");
+  fireEvent.click(screen.getByText("Minus"));
+  expect(screen.getByText("Bestand:0")).toBeTruthy();
+  fireEvent.click(screen.getByText("Leer"));
+  expect(
+    screen.getByText("Bitte für jedes Team einen Namen eingeben."),
+  ).toBeTruthy();
+  fireEvent.click(screen.getByText("Trim"));
+  expect(screen.getByText("Trimmed:0")).toBeTruthy();
+});

@@ -13,6 +13,7 @@ interface TeamsState {
   error: string | null;
   updateScore: (id: number, delta: number) => void;
   saveTeams: (teams: Team[]) => boolean;
+  resetScores: () => boolean;
 }
 const Context = createContext<TeamsState | null>(null);
 export function TeamsProvider({ children }: { children: ReactNode }) {
@@ -57,9 +58,14 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
     }
     function saveTeams(draft: Team[]) {
       if (!ready) return false;
+      if (draft.some((team) => !team.name.trim())) {
+        setError("Bitte für jedes Team einen Namen eingeben.");
+        return false;
+      }
       // Keep scores changed in another tab while the editor was open.
       const next = draft.map((team) => ({
         ...team,
+        name: team.name.trim(),
         score:
           teams.find((current) => current.id === team.id)?.score ?? team.score,
       }));
@@ -70,11 +76,20 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
     function updateScore(id: number, delta: number) {
       if (!ready) return;
       const next = teams.map((team) =>
-        team.id === id ? { ...team, score: team.score + delta } : team,
+        team.id === id
+          ? { ...team, score: Math.max(0, team.score + delta) }
+          : team,
       );
       if (persist(next)) setTeams(next);
     }
-    return { teams, ready, error, saveTeams, updateScore };
+    function resetScores() {
+      if (!ready) return false;
+      const next = teams.map((team) => ({ ...team, score: 0 }));
+      if (!persist(next)) return false;
+      setTeams(next);
+      return true;
+    }
+    return { teams, ready, error, saveTeams, updateScore, resetScores };
   }, [teams, ready, error]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
