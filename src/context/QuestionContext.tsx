@@ -17,6 +17,7 @@ export interface QuizQuestion {
   revealedOptions?: number[];
   correctOptions?: number[];
   solutionRevealed?: boolean;
+  solution?: string;
   durationMs?: number;
   pausedRemainingMs?: number;
 }
@@ -92,6 +93,13 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
     throw new Error("Ungültige richtige Antworten");
   if ("solutionRevealed" in data && typeof data.solutionRevealed !== "boolean")
     throw new Error("Ungültige Lösungsfreigabe");
+  if (
+    "solution" in data &&
+    (typeof data.solution !== "string" ||
+      !data.solution.trim() ||
+      data.solution.length > 300)
+  )
+    throw new Error("Ungültige Lösung");
   for (const key of ["durationMs", "pausedRemainingMs"] as const) {
     if (
       key in data &&
@@ -115,6 +123,7 @@ export function parseQuestion(raw: string | null): QuizQuestion | null {
     ...("solutionRevealed" in data
       ? { solutionRevealed: data.solutionRevealed as boolean }
       : {}),
+    ...("solution" in data ? { solution: data.solution as string } : {}),
     text: data.text,
     ...("revealedOptions" in data
       ? { revealedOptions: data.revealedOptions as number[] }
@@ -134,7 +143,7 @@ interface QuestionState {
     seconds: number,
     details?: Pick<
       PreparedQuestion,
-      "number" | "options" | "correctOptions"
+      "number" | "options" | "correctOptions" | "solution"
     > & {
       revealedOptions?: number[];
       startPaused?: boolean;
@@ -146,6 +155,8 @@ interface QuestionState {
   revealSolution: (visible: boolean) => void;
   toggleTimer: () => void;
   restartTimer: () => void;
+  updateDuration: (seconds: number) => void;
+  syncActiveQuestion: (updated: PreparedQuestion) => void;
   dismiss: () => void;
 }
 const Context = createContext<QuestionState | null>(null);
@@ -191,7 +202,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       seconds: number,
       details?: Pick<
         PreparedQuestion,
-        "number" | "options" | "correctOptions"
+        "number" | "options" | "correctOptions" | "solution"
       > & {
         revealedOptions?: number[];
         startPaused?: boolean;
@@ -210,7 +221,8 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         );
         return false;
       }
-      const { startPaused, ...questionDetails } = details ?? {};
+      const { startPaused, solution, ...questionDetails } = details ?? {};
+      const trimmedSolution = solution?.trim();
       return persist({
         ...(startPaused ? { pausedRemainingMs: seconds * 1000 } : {}),
         text: text.trim(),
@@ -223,6 +235,7 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
               revealedOptions: details.revealedOptions ?? [],
             }
           : {}),
+        ...(trimmedSolution ? { solution: trimmedSolution } : {}),
       });
     }
     return {
@@ -260,12 +273,28 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         });
       },
       revealSolution: (visible: boolean) => {
-        if (!ready || !question || !question.correctOptions?.length) return;
+        if (
+          !ready ||
+          !question ||
+          !(question.correctOptions?.length || question.solution)
+        )
+          return;
+        const now = Date.now();
         persist({
           ...question,
           solutionRevealed: visible,
           ...(visible
-            ? { revealedOptions: question.options!.map((_, index) => index) }
+            ? {
+                // Show the solution on the projector and stop the clock.
+                visible: true,
+                ...(question.pausedRemainingMs === undefined &&
+                question.endsAt > now
+                  ? { pausedRemainingMs: question.endsAt - now }
+                  : {}),
+              }
+            : {}),
+          ...(visible && question.options?.length
+            ? { revealedOptions: question.options.map((_, index) => index) }
             : {}),
         });
       },
@@ -286,6 +315,58 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
         persist({
           ...rest,
           endsAt: Date.now() + (question.durationMs ?? 60000),
+        });
+      },
+      updateDuration: (seconds: number) => {
+        if (
+          !ready ||
+          !question ||
+          !Number.isInteger(seconds) ||
+          seconds < 1 ||
+          seconds > 3600
+        )
+          return;
+        const durationMs = seconds * 1000;
+        const notStartedYet =
+          question.pausedRemainingMs !== undefined &&
+          question.durationMs !== undefined &&
+          question.pausedRemainingMs === question.durationMs;
+        persist({
+          ...question,
+          durationMs,
+          ...(notStartedYet
+            ? {
+                pausedRemainingMs: durationMs,
+                endsAt: Date.now() + durationMs,
+              }
+            : {}),
+        });
+      },
+      syncActiveQuestion: (updated: PreparedQuestion) => {
+        if (!ready || !question) return;
+        const trimmedSolution = updated.solution?.trim();
+        const nextCorrect = updated.correctOptions?.length
+          ? updated.correctOptions
+          : undefined;
+        const hasNextSolution = Boolean(nextCorrect?.length || trimmedSolution);
+        const {
+          solution: _oldSolution,
+          correctOptions: _oldCorrect,
+          ...rest
+        } = question;
+        persist({
+          ...rest,
+          number: updated.number,
+          text: updated.text.trim(),
+          options: updated.options,
+          revealedOptions: (question.revealedOptions ?? []).filter(
+            (index) => index >= 0 && index < updated.options.length,
+          ),
+          ...(nextCorrect ? { correctOptions: nextCorrect } : {}),
+          ...(trimmedSolution ? { solution: trimmedSolution } : {}),
+          solutionRevealed: hasNextSolution
+            ? Boolean(question.solutionRevealed)
+            : false,
         });
       },
       dismiss: () => {

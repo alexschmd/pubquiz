@@ -14,8 +14,14 @@ import {
   parseQuestion,
 } from "./QuestionContext";
 function Probe() {
-  const { question, publish, dismiss, toggleTimer, restartTimer } =
-    useQuestion();
+  const {
+    question,
+    publish,
+    dismiss,
+    toggleTimer,
+    restartTimer,
+    revealSolution,
+  } = useQuestion();
   const remaining = useRemainingSeconds(question);
   return (
     <>
@@ -25,6 +31,19 @@ function Probe() {
       <button onClick={dismiss}>Ende</button>
       <button onClick={toggleTimer}>Pause</button>
       <button onClick={restartTimer}>Neustart</button>
+      <button
+        onClick={() =>
+          publish("Hauptstadt?", 30, {
+            number: 2,
+            options: [],
+            solution: "  Paris ",
+          })
+        }
+      >
+        Offen
+      </button>
+      <button onClick={() => revealSolution(true)}>Aufdecken</button>
+      <button onClick={() => revealSolution(false)}>Verbergen</button>
     </>
   );
 }
@@ -157,4 +176,59 @@ test("restores multiple correct answers and migrates the previous single-answer 
   expect(() =>
     parseQuestion(JSON.stringify({ ...base, correctOptions: [3] })),
   ).toThrow();
+});
+
+test("validates and restores the solution of open questions", () => {
+  const base = { text: "Hauptstadt?", endsAt: 1000, options: [] };
+  expect(
+    parseQuestion(JSON.stringify({ ...base, solution: "Paris" }))?.solution,
+  ).toBe("Paris");
+  expect(parseQuestion(JSON.stringify(base))).not.toHaveProperty("solution");
+  for (const solution of ["", "   ", 3, "x".repeat(301)])
+    expect(() => parseQuestion(JSON.stringify({ ...base, solution }))).toThrow(
+      "Ungültige Lösung",
+    );
+});
+
+test("persists, reveals and hides the solution of an open question", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100000);
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  fireEvent.click(screen.getByText("Aufdecken"));
+  expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
+  fireEvent.click(screen.getByText("Offen"));
+  const published = parseQuestion(localStorage.getItem(QUESTION_KEY));
+  expect(published?.solution).toBe("Paris");
+  expect(published?.revealedOptions).toEqual([]);
+  fireEvent.click(screen.getByText("Aufdecken"));
+  const revealed = parseQuestion(localStorage.getItem(QUESTION_KEY));
+  // Revealing stops the running clock and shows the question on the projector.
+  expect(revealed).toEqual({
+    ...published,
+    solutionRevealed: true,
+    visible: true,
+    pausedRemainingMs: 30000,
+  });
+  fireEvent.click(screen.getByText("Verbergen"));
+  expect(parseQuestion(localStorage.getItem(QUESTION_KEY))).toEqual({
+    ...published,
+    solutionRevealed: false,
+    pausedRemainingMs: 30000,
+  });
+});
+
+test("ignores revealing a solution when the question has none", () => {
+  render(
+    <QuestionProvider>
+      <Probe />
+    </QuestionProvider>,
+  );
+  fireEvent.click(screen.getByText("Start"));
+  const published = localStorage.getItem(QUESTION_KEY);
+  fireEvent.click(screen.getByText("Aufdecken"));
+  expect(localStorage.getItem(QUESTION_KEY)).toBe(published);
 });
