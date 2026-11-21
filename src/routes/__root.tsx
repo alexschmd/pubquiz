@@ -29,8 +29,7 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
-        content:
-          "Pubquiz – Du moderierst. Der Beamer läuft mit. Live-Scoreboard, Fragen und Countdown im Browser.",
+        content: "Pubquiz: Scoreboard, Fragen und Countdown im Browser.",
       },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://pubquiz.schmidalex.de/og-image.png" },

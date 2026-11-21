@@ -4,6 +4,10 @@ import { LandingDesign } from "../components/LandingDesign";
 
 type LandingSearch = { landing?: true };
 
+const SITE_TITLE = "Pubquiz App";
+const SITE_DESCRIPTION =
+  "Teams anlegen, Fragen vorbereiten und Punktestand, Antworten und Countdown auf dem Beamer zeigen. Läuft einfach im Browser, ohne Anmeldung.";
+
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): LandingSearch =>
     search.landing === true ||
@@ -15,36 +19,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      {
-        title:
-          "Pubquiz – Kostenloses Live-Scoreboard & Regie für deinen Quizabend",
-      },
-      {
-        name: "description",
-        content:
-          "Bereite Fragen vor, verwalte Teams am Laptop und zeige Live-Scoreboard, Antworten und Countdown direkt auf dem Beamer – kostenlos im Browser, ohne Anmeldung.",
-      },
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
       { property: "og:url", content: "https://pubquiz.schmidalex.de/" },
-      {
-        property: "og:title",
-        content:
-          "Pubquiz – Kostenloses Live-Scoreboard & Regie für deinen Quizabend",
-      },
-      {
-        property: "og:description",
-        content:
-          "Bereite Fragen vor, verwalte Teams am Laptop und zeige Live-Scoreboard, Antworten und Countdown direkt auf dem Beamer – kostenlos im Browser, ohne Anmeldung.",
-      },
-      {
-        name: "twitter:title",
-        content:
-          "Pubquiz – Kostenloses Live-Scoreboard & Regie für deinen Quizabend",
-      },
-      {
-        name: "twitter:description",
-        content:
-          "Bereite Fragen vor, verwalte Teams am Laptop und zeige Live-Scoreboard, Antworten und Countdown direkt auf dem Beamer – kostenlos im Browser, ohne Anmeldung.",
-      },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      { name: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
     ],
     links: [{ rel: "canonical", href: "https://pubquiz.schmidalex.de/" }],
     scripts: [
@@ -55,8 +36,7 @@ export const Route = createFileRoute("/")({
           "@type": "WebApplication",
           name: "Pubquiz",
           url: "https://pubquiz.schmidalex.de/",
-          description:
-            "Kostenloses Live-Scoreboard, Fragenverwaltung und Countdown für deinen Pubquiz-Abend mit getrennter Regie- und Beamer-Ansicht direkt im Browser.",
+          description: SITE_DESCRIPTION,
           inLanguage: "de",
           applicationCategory: "GameApplication",
           operatingSystem: "Web",
