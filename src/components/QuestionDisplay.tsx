@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Check } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import {
   type QuizQuestion,
@@ -63,15 +64,39 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
                   question.correctOptions?.includes(option.index) && (
                     <span
                       className="solution-check"
+                      role="img"
                       aria-label="Richtige Antwort"
                     >
-                      ✓
+                      <Check aria-hidden="true" />
                     </span>
                   )}
               </m.li>
             ))}
           </m.ol>
         )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {question.solutionRevealed &&
+          !!question.solution &&
+          !question.options?.length && (
+            <m.div
+              key="open-solution"
+              className="question-open-solution"
+              initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.25 }}
+            >
+              <span
+                className="solution-check"
+                role="img"
+                aria-label="Richtige Antwort"
+              >
+                <Check aria-hidden="true" />
+              </span>
+              <span>{question.solution}</span>
+            </m.div>
+          )}
       </AnimatePresence>
       <m.div
         layout
@@ -94,7 +119,10 @@ export function QuestionDisplay({ question }: { question: QuizQuestion }) {
         </div>
         <p className="question-time-label" role="status">
           {question.pausedRemainingMs !== undefined
-            ? "Zeit gestoppt"
+            ? question.durationMs !== undefined &&
+              question.pausedRemainingMs === question.durationMs
+              ? "Bereit"
+              : "Zeit gestoppt"
             : remaining === 0
               ? "Zeit abgelaufen"
               : "Verbleibende Zeit"}

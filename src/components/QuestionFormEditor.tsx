@@ -115,12 +115,31 @@ export function QuestionFormEditor({
                 </div>
               ))}
             </div>
+            {item.options.length === 0 && (
+              <Field>
+                <FieldLabel htmlFor={`question-solution-${item.number}`}>
+                  Lösung (optional)
+                </FieldLabel>
+                <Input
+                  id={`question-solution-${item.number}`}
+                  maxLength={300}
+                  placeholder="Richtige Antwort für Moderation & Aufdecken"
+                  value={item.solution ?? ""}
+                  onChange={(event) =>
+                    update(item.number, { solution: event.target.value })
+                  }
+                />
+              </Field>
+            )}
             <Button
               type="button"
               variant="outline"
               disabled={item.options.length >= 8}
               onClick={() =>
-                update(item.number, { options: [...item.options, ""] })
+                update(item.number, {
+                  options: [...item.options, ""],
+                  solution: undefined,
+                })
               }
             >
               <Plus data-icon="inline-start" />

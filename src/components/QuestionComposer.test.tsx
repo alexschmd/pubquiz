@@ -33,7 +33,7 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     screen.getByRole("button", { name: "Zur Frage wechseln" }),
   ).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Fragen hinzufügen" }));
-  fireEvent.change(await screen.findByLabelText("Fragen"), {
+  fireEvent.change(await screen.findByRole("textbox", { name: "Fragen" }), {
     target: { value: "4. Erste Frage?; (A) (B)\n5. Zweite Frage?" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Fragen speichern" }));
@@ -60,23 +60,38 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   fireEvent.click(screen.getByRole("button", { name: "Vorherige Frage" }));
   expect(screen.getByLabelText("Zeit für Frage 4")).toBeTruthy();
   expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
-  fireEvent.click(screen.getByRole("combobox"));
-  const option = await screen.findByRole("option", {
-    name: "Frage 5: Zweite Frage?",
-  });
-  fireEvent.mouseMove(option);
-  fireEvent.mouseDown(option);
-  fireEvent.mouseUp(option);
-  fireEvent.click(option);
+  fireEvent.click(
+    screen.getByRole("option", { name: "Frage 5: Zweite Frage?" }),
+  );
+  expect(
+    screen
+      .getByRole("option", { name: "Frage 5: Zweite Frage?" })
+      .getAttribute("aria-selected"),
+  ).toBe("true");
   await screen.findByLabelText("Zeit für Frage 5");
   fireEvent.change(screen.getByLabelText("Zeit für Frage 5"), {
     target: { value: "90" },
   });
 
   expect(localStorage.getItem(QUESTION_KEY)).toBe(null);
-  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(5);
+  // Showing a question alone does not mark it as played.
+  expect(
+    JSON.parse(localStorage.getItem("pubquiz-question-bank")!).played,
+  ).toEqual([]);
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Zeit starten" }).at(-1)!,
+  );
   const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
-  expect(published.number).toBe(5);
+  await waitFor(() =>
+    expect(
+      JSON.parse(localStorage.getItem("pubquiz-question-bank")!).played,
+    ).toEqual([5]),
+  );
+  expect(
+    screen.getByRole("option", { name: "Frage 5: Zweite Frage? (gespielt)" }),
+  ).toBeTruthy();
   fireEvent.click(
     screen.getByRole("button", { name: "Zum Scoreboard wechseln" }),
   );
@@ -95,9 +110,19 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(
     (screen.getByLabelText("Zeit für Frage 4") as HTMLInputElement).value,
   ).toBe("30");
-  expect(screen.getByRole("combobox")).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "Fragen" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Alle anzeigen" }));
-  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  // Question 5 is still running, so replacing it needs a confirmation.
+  fireEvent.click(screen.getByRole("button", { name: "Zur laufenden Frage 5" }));
+  expect(screen.getByLabelText("Zeit für Frage 5")).toBeTruthy();
+  fireEvent.click(screen.getByRole("option", { name: /Frage 4/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  const replaceDialog = await screen.findByRole("alertdialog");
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(5);
+  fireEvent.click(
+    within(replaceDialog).getByRole("button", { name: "Frage ersetzen" }),
+  );
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(4);
   expect(
     JSON.parse(localStorage.getItem(QUESTION_KEY)!).revealedOptions,
   ).toEqual([0, 1]);
@@ -124,7 +149,24 @@ test("saves questions in a dialog, selects and times them independently, keeps v
     JSON.parse(localStorage.getItem("pubquiz-question-bank")!).questions[0]
       .correctOptions,
   ).toEqual([1]);
+  // The solution can be revealed before the timer expires and hidden again.
+  expect(
+    screen.getAllByRole("button", { name: "Lösung aufdecken" }).length,
+  ).toBe(1);
+  fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
+  const early = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
+  expect(early.solutionRevealed).toBe(true);
+  expect(early.revealedOptions).toEqual([0, 1]);
+  expect(early.pausedRemainingMs).toBe(marked.pausedRemainingMs);
   expect(screen.queryByRole("button", { name: "Lösung aufdecken" })).toBe(null);
+  fireEvent.click(screen.getByRole("button", { name: "Lösung verbergen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).solutionRevealed).toBe(
+    false,
+  );
+  expect(screen.queryByRole("button", { name: "Lösung verbergen" })).toBe(null);
+  expect(
+    screen.getAllByRole("button", { name: "Lösung aufdecken" }).length,
+  ).toBe(1);
   fireEvent.click(
     screen.getByRole("button", { name: "Antwort A als richtig markieren" }),
   );
@@ -150,8 +192,57 @@ test("saves questions in a dialog, selects and times them independently, keeps v
   expect(solution.revealedOptions).toEqual([0, 1]);
   expect(solution.endsAt).toBe(expired.endsAt);
   expect(
-    screen.getByRole("button", { name: "Zurück zum Leaderboard" }),
+    screen.getByRole("button", { name: "Zurück zum Scoreboard" }),
   ).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Lösung verbergen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).solutionRevealed).toBe(
+    false,
+  );
+  expect(
+    screen.getAllByRole("button", { name: "Lösung aufdecken" }).length,
+  ).toBe(1);
+});
+
+test("shows the solution of an open question to the host and reveals and hides it", async () => {
+  localStorage.setItem(
+    "pubquiz-question-bank",
+    JSON.stringify({
+      text: "1. Hauptstadt von Frankreich?; =Paris\n2. Ohne Lösung?",
+      durations: {},
+    }),
+  );
+  render(
+    <QuestionProvider>
+      <QuestionComposer />
+    </QuestionProvider>,
+  );
+  const hint = await screen.findByText("Paris");
+  expect(hint.closest(".question-solution-hint")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  const published = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
+  expect(published.solution).toBe("Paris");
+  expect(published.options).toEqual([]);
+  expect(published.solutionRevealed).toBeUndefined();
+  fireEvent.click(screen.getByRole("button", { name: "Lösung aufdecken" }));
+  const revealed = JSON.parse(localStorage.getItem(QUESTION_KEY)!);
+  expect(revealed.solutionRevealed).toBe(true);
+  expect(revealed.revealedOptions).toEqual([]);
+  fireEvent.click(screen.getByRole("button", { name: "Lösung verbergen" }));
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).solutionRevealed).toBe(
+    false,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Nächste Frage" }));
+  expect(document.querySelector(".question-solution-hint")).toBe(null);
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
+  fireEvent.click(
+    within(await screen.findByRole("alertdialog")).getByRole("button", {
+      name: "Frage ersetzen",
+    }),
+  );
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).solution,
+  ).toBeUndefined();
+  expect(screen.queryByRole("button", { name: "Lösung aufdecken" })).toBe(null);
 });
 
 test("copies an import prompt from the questions dialog", async () => {
@@ -210,11 +301,15 @@ test("edits imported questions and multiple correct answers in form fields", asy
   expect(saved.questions[0].correctOptions).toEqual([0, 2]);
   fireEvent.click(screen.getByRole("button", { name: "Fragen bearbeiten" }));
   expect(
-    ((await screen.findByLabelText("Fragen")) as HTMLTextAreaElement).value,
+    (
+      (await screen.findByRole("textbox", {
+        name: "Fragen",
+      })) as HTMLTextAreaElement
+    ).value,
   ).toContain("(2*) (3) (4*)");
 });
 
-test("returns to leaderboard after expiry and confirms aborting a running question", async () => {
+test("returns to scoreboard after expiry and confirms aborting a running question", async () => {
   localStorage.setItem(
     "pubquiz-question-bank",
     JSON.stringify({
@@ -239,20 +334,59 @@ test("returns to leaderboard after expiry and confirms aborting a running questi
     </QuestionProvider>,
   );
   fireEvent.click(
-    await screen.findByRole("button", { name: "Zurück zum Leaderboard" }),
+    await screen.findByRole("button", { name: "Zurück zum Scoreboard" }),
   );
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
-  fireEvent.click(screen.getByRole("button", { name: "Nächste Frage" }));
+  // Automatically advances to the next unplayed question.
   expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Frage starten" }));
+  fireEvent.click(screen.getByRole("button", { name: "Frage anzeigen" }));
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).number).toBe(2);
   expect(
     JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
   ).toBe(60000);
-  fireEvent.click(screen.getByRole("button", { name: "Zeit starten" }));
+  // Updating duration before starting the timer updates the paused active question.
+  fireEvent.change(screen.getByLabelText("Zeit für Frage 2"), {
+    target: { value: "45" },
+  });
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).durationMs).toBe(
+    45000,
+  );
+  expect(
+    JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
+  ).toBe(45000);
+  // Editing the question bank keeps the selected question and syncs the active question.
+  fireEvent.click(screen.getByRole("button", { name: "Fragen bearbeiten" }));
+  fireEvent.change(await screen.findByRole("textbox", { name: "Fragen" }), {
+    target: { value: "1. Erste Frage?\n2. Zweite Frage (korrigiert)?" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Fragen speichern" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBe(null));
+  expect(screen.getByLabelText("Zeit für Frage 2")).toBeTruthy();
+  expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!).text).toBe(
+    "Zweite Frage (korrigiert)?",
+  );
+  expect(screen.getAllByRole("button", { name: "Zeit starten" }).length).toBe(
+    2,
+  );
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Zeit starten" }).at(-1)!,
+  );
   expect(
     JSON.parse(localStorage.getItem(QUESTION_KEY)!).pausedRemainingMs,
   ).toBeUndefined();
+  expect(screen.getAllByRole("button", { name: "Zeit stoppen" }).length).toBe(
+    2,
+  );
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Zeit stoppen" }).at(-1)!,
+  );
+  expect(
+    screen.getAllByRole("button", { name: "Zeit fortsetzen" }).length,
+  ).toBe(2);
+  expect(screen.queryByRole("button", { name: "Zeit starten" })).toBe(null);
+  fireEvent.click(
+    screen.getAllByRole("button", { name: "Zeit fortsetzen" }).at(-1)!,
+  );
   expect(screen.getAllByRole("button", { name: "Zeit stoppen" }).length).toBe(
     2,
   );
@@ -273,5 +407,5 @@ test("returns to leaderboard after expiry and confirms aborting a running questi
     within(dialog).getByRole("button", { name: "Frage abbrechen" }),
   );
   expect(JSON.parse(localStorage.getItem(QUESTION_KEY)!)).toBe(null);
-  expect(screen.getByRole("button", { name: "Frage starten" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Frage anzeigen" })).toBeTruthy();
 });
