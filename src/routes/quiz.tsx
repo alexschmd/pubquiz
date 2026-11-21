@@ -6,6 +6,16 @@ import { SlidingNumber } from "../components/SlidingNumber";
 import { RevealFx } from "../components/RevealFx";
 import { TeamBackground } from "../components/TeamBackground";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "../components/ui/empty";
 import {
   LazyMotion,
   domMax,
@@ -17,49 +27,106 @@ import {
   useIsPresent,
 } from "motion/react";
 import { useTeams } from "../context/TeamsContext";
+import { useQuiz } from "../context/QuizContext";
 import { teamRows, teamRanks } from "../lib/teams";
+
+function ScoreboardPending() {
+  return (
+    <main className="scoreboard" aria-label="Punktestand" aria-busy="true" />
+  );
+}
+
 export const Route = createFileRoute("/quiz")({
+  ssr: false,
+  validateSearch: (search: Record<string, unknown>): { preview?: true } => {
+    const value = search.preview;
+    return value === true || value === "true" || value === 1 || value === "1"
+      ? { preview: true }
+      : {};
+  },
   component: Scoreboard,
-  head: () => ({ meta: [{ title: "Scoreboard | Pubquiz" }] }),
+  pendingComponent: ScoreboardPending,
+  head: () => ({
+    meta: [
+      { title: "Pubquiz | Scoreboard" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
 });
 function Scoreboard() {
+  const { preview } = Route.useSearch();
   const { teams, ready, error } = useTeams();
-  const { question, ready: questionReady } = useQuestion();
+  const {
+    question,
+    ready: questionReady,
+    error: questionError,
+  } = useQuestion();
+  const { running, ready: quizReady, error: quizError } = useQuiz();
+  const displayError = error || questionError || quizError;
   const ranks = teamRanks(teams);
-  if (!ready || !questionReady)
-    return <main className="empty" aria-label="Punktestand" aria-busy="true" />;
+  if (!ready || !questionReady || !quizReady) return <ScoreboardPending />;
+  const showQuestion = !!question && question.visible !== false;
+  const scene = showQuestion
+    ? "question"
+    : teams.length > 0 && !running
+      ? "standby"
+      : "leaderboard";
   return (
     <LazyMotion features={domMax} strict>
       <MotionConfig reducedMotion="user">
         <RevealFx>
           <LayoutGroup>
-            {error && (
-              <p className="notice" role="alert">
-                {error}
-              </p>
+            {displayError && (
+              <Alert
+                variant="destructive"
+                className="fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 shadow-lg"
+              >
+                <AlertDescription>{displayError}</AlertDescription>
+              </Alert>
             )}
             <div className="scoreboard-scenes">
               <AnimatePresence initial={false}>
-                <ScoreboardScene
-                  key={
-                    question && question.visible !== false
-                      ? "question"
-                      : "leaderboard"
-                  }
-                >
-                  {question && question.visible !== false ? (
+                <ScoreboardScene key={scene}>
+                  {showQuestion ? (
                     <QuestionDisplay question={question} />
                   ) : teams.length === 0 ? (
-                    <main className="empty scoreboard-empty">
-                      <TeamBackground color="#4b0082" corner />
-                      <p className="eyebrow">PUBQUIZ</p>
-                      <h1>Bereit für die erste Runde?</h1>
-                      <p>
-                        Lege deine Teams an und bring das Scoreboard zum Leben.
-                      </p>
-                      <Link className="button" to="/manage">
-                        Teams einrichten
-                      </Link>
+                    <main className="scoreboard-empty">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle role="heading" aria-level={1}>
+                            Bereit für die erste Runde?
+                          </EmptyTitle>
+                          <EmptyDescription>
+                            Lege in der Regie deine Teams an. Das Scoreboard
+                            erscheint hier automatisch live.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        {!preview && (
+                          <EmptyContent>
+                            <Button
+                              size="lg"
+                              nativeButton={false}
+                              render={<Link to="/regie" />}
+                            >
+                              Regie öffnen
+                              <ArrowRight data-icon="inline-end" />
+                            </Button>
+                          </EmptyContent>
+                        )}
+                      </Empty>
+                    </main>
+                  ) : scene === "standby" ? (
+                    <main className="scoreboard-empty">
+                      <Empty>
+                        <EmptyHeader>
+                          <EmptyTitle role="heading" aria-level={1}>
+                            Gleich geht’s los.
+                          </EmptyTitle>
+                          <EmptyDescription>
+                            Das Pubquiz startet jeden Moment.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     </main>
                   ) : (
                     <main className="scoreboard" aria-label="Punktestand">
